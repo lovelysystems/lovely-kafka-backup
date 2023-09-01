@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
+
 plugins {
     kotlin("jvm")
     id("com.lovelysystems.gradle")
@@ -19,8 +21,14 @@ if (JavaVersion.current() != JavaVersion.VERSION_11) {
     error("Java 11 is required for this Project, found ${JavaVersion.current()}")
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
+subprojects {
+    version = rootProject.version
+    // ensure that java 11 is used in all kotlin projects
+    extensions.findByType<KotlinJvmProjectExtension>()?.apply {
+        jvmToolchain {
+            (this as JavaToolchainSpec).languageVersion.set(JavaLanguageVersion.of(11))
+        }
+    }
 }
 
 kotlin {

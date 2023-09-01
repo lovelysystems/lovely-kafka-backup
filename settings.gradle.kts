@@ -39,7 +39,16 @@ dependencyResolutionManagement {
             // Kotest
             version("kotest", "5.6.2")
             library("kotest-runner-junit5", "io.kotest", "kotest-runner-junit5").versionRef("kotest")
-            library("kotest-framework-api", "io.kotest", "kotest-framework-api-jvm").versionRef("kotest")
+            library(
+                "kotest-extensions-testcontainers",
+                "io.kotest.extensions",
+                "kotest-extensions-testcontainers"
+            ).version("2.0.2")
+
+            // Testcontainers
+            version("testcontainers", "1.19.0")
+            library("testcontainers", "org.testcontainers", "testcontainers").versionRef("testcontainers")
+            library("testcontainers-kafka", "org.testcontainers", "kafka").versionRef("testcontainers")
         }
     }
 }

@@ -2,6 +2,7 @@ package ls.kafka.io
 
 import ls.kafka.model.DumpRecord
 import java.io.DataOutputStream
+import java.io.OutputStream
 
 /**
  * Writes records to a stream in a binary format. The format is as follows:
@@ -14,7 +15,8 @@ import java.io.DataOutputStream
  * 6. 4 bytes: value length
  * 7. var length bytes: value
  */
-class RecordStreamWriter(private val out: DataOutputStream) {
+class RecordStreamWriter(out: OutputStream) {
+    private val out = DataOutputStream(out)
 
     /**
      * Writes a single record to the stream.
@@ -34,6 +36,7 @@ class RecordStreamWriter(private val out: DataOutputStream) {
      */
     fun flush() {
         out.writeInt(-1)  // last entry marker
+        out.flush()
     }
 
     /**
