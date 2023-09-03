@@ -1,0 +1,4 @@
+# this file gets used by asdf and uses a symbolic version
+# create a symlink named 11 in ~/.asdf/installs/java to the 11 version you want to use
+# then run `asdf reshim java`
+java 11
