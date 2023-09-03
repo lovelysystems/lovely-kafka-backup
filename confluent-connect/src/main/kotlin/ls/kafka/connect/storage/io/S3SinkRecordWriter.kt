@@ -9,9 +9,10 @@ import org.apache.kafka.connect.sink.SinkRecord
 import org.apache.kafka.connect.storage.Converter
 
 /**
- * Writes records to S3 in a binary format.
+ * Allows to write a Kafka Connect [SinkRecord] to the given s3 stream in a binary format using the shared
+ * [RecordStreamWriter]. Supports the allowed compression types of the Confluent S3 connector.
  */
-class S3RecordWriter(private val s3out: S3OutputStream, private val converter: Converter) : IORecordWriter {
+class S3SinkRecordWriter(private val s3out: S3OutputStream, private val converter: Converter) : IORecordWriter {
     private val logger = KotlinLogging.logger {}
     private val s3outWrapper = s3out.wrapForCompression()
     private val writer = RecordStreamWriter(s3outWrapper)

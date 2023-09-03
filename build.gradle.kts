@@ -11,7 +11,7 @@ lovely {
     dockerProject("lovelysystems/lovely-kafka-backup") {
         from("docker")
         from(project("confluent-connect").tasks["shadowJar"]) {
-            into("libs")
+            into("confluent-connect-libs")
         }
     }
 }
@@ -33,4 +33,8 @@ subprojects {
 
 kotlin {
     jvmToolchain(11)
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }

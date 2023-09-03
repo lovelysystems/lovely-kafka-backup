@@ -9,7 +9,7 @@ import io.confluent.connect.storage.format.Format
 import io.confluent.connect.storage.format.RecordWriter
 import io.confluent.connect.storage.format.RecordWriterProvider
 import io.confluent.connect.storage.format.SchemaFileReader
-import ls.kafka.connect.storage.io.S3RecordWriter
+import ls.kafka.connect.storage.io.S3SinkRecordWriter
 import org.apache.kafka.connect.converters.ByteArrayConverter
 
 /**
@@ -34,7 +34,7 @@ class ByteArrayRecordFormat(private val storage: S3Storage) : Format<S3SinkConne
             override fun getRecordWriter(conf: S3SinkConnectorConfig, filename: String): RecordWriter {
                 val adjustedFilename = Utils.getAdjustedFilename(recordView, filename, getExtension())
                 val s3out = storage.create(adjustedFilename, true, ByteArrayRecordFormat::class.java)
-                val ioWriter = S3RecordWriter(s3out, converter)
+                val ioWriter = S3SinkRecordWriter(s3out, converter)
                 return S3RetriableRecordWriter(ioWriter)
             }
         }
