@@ -52,11 +52,10 @@ class ByteArrayRecordFormatTest : StringSpec({
         val s3Storage = S3Storage(connectorConfig, minio.getHostAddress())
 
         val formatter = ByteArrayRecordFormat(s3Storage)
-        val writer = formatter.recordWriterProvider.getRecordWriter(connectorConfig, "file-name-1")
         withEnvironment(env) {
-            writer.use {
-                it.write(sampleRecord)
-                it.commit()
+            formatter.recordWriterProvider.getRecordWriter(connectorConfig, "file-name-1").use {writer ->
+                writer.write(sampleRecord)
+                writer.commit()
             }
         }
 
@@ -68,11 +67,10 @@ class ByteArrayRecordFormatTest : StringSpec({
         val s3Storage = S3Storage(connectorConfig, minio.getHostAddress())
 
         val formatter = ByteArrayRecordFormat(s3Storage)
-        val writer = formatter.recordWriterProvider.getRecordWriter(connectorConfig, "zip-file-name-1")
         withEnvironment(env) {
-            writer.use {
-                it.write(sampleRecord)
-                it.commit()
+            formatter.recordWriterProvider.getRecordWriter(connectorConfig, "zip-file-name-1").use {writer ->
+                writer.write(sampleRecord)
+                writer.commit()
             }
         }
         minio.listFiles(bucket) shouldBe listOf("zip-file-name-1.bytea.gz")

@@ -1,9 +1,13 @@
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
+import io.gitlab.arturbosch.detekt.Detekt
+import name.remal.gradle_plugins.dsl.extensions.javaModuleName
 
 plugins {
     kotlin("jvm")
     id("com.lovelysystems.gradle")
     id("com.github.johnrengelman.shadow")
+    id("io.gitlab.arturbosch.detekt") apply false
+    id("name.remal.check-updates")
 }
 
 lovely {
@@ -37,4 +41,22 @@ kotlin {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+fun getFormattedProjectName(project: Project): String =
+    project.javaModuleName.removePrefix("lovely_kafka_backup").replace(".", ":").replace("_", "-")
+
+/**
+ *  Groups together all the known Detekt tasks & adds the non-default ones to the given subproject's "check" task
+ */
+task("detektAll", type = Detekt::class) {
+    val includedTasks = setOf("detekt", "detektMain", "detektTest", "detektJvmMain", "detektJvmTest")
+    subprojects.forEach { project ->
+        project.getAllTasks(true).values.flatten().forEach { task ->
+            if (includedTasks.contains(task.name)) {
+                val projectName = getFormattedProjectName(task.project)
+                dependsOn("$projectName:${task.name}")
+            }
+        }
+    }
 }

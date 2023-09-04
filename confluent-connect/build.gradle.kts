@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm")
     id("com.github.johnrengelman.shadow")
+    id("io.gitlab.arturbosch.detekt")
     `java-test-fixtures`
 }
 
