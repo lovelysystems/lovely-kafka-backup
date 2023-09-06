@@ -6,7 +6,7 @@ import aws.sdk.kotlin.services.s3.headBucket
 import aws.sdk.kotlin.services.s3.listObjectsV2
 import aws.sdk.kotlin.services.s3.model.GetObjectRequest
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
-import aws.smithy.kotlin.runtime.content.toByteArray
+import aws.smithy.kotlin.runtime.content.writeToFile
 import aws.smithy.kotlin.runtime.net.Url
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
@@ -17,6 +17,8 @@ import java.io.DataInputStream
 import java.io.EOFException
 import java.io.InputStream
 import java.util.*
+import kotlin.io.path.createTempFile
+import kotlin.io.path.inputStream
 
 data class BackupFilePath(val name: String) {
     val topic: String
@@ -150,8 +152,15 @@ class BackupBucket(private val bucket: String, s3Config: S3Config, val kafkaConf
         val stream = s3.getObject(GetObjectRequest.invoke {
             bucket = this@BackupBucket.bucket
             key = path.name
-        }) {
-            it.body?.toByteArray()?.inputStream()!!
+        }) { response ->
+            val tempFile = createTempFile()
+            val body = response.body ?: error("Got object with empty body")
+            body.writeToFile(tempFile)
+            tempFile.inputStream()
+            //TODO remove tempfile once the sdk has a released version which directly gives the input stream.
+            // Fix is already merged in the sdk but not released, see:
+            // https://github.com/awslabs/smithy-kotlin/pull/945
+            // https://github.com/awslabs/aws-sdk-kotlin/issues/617
         }
         return BackupFile(path.name, stream)
     }
