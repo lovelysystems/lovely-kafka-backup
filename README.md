@@ -53,12 +53,8 @@ The above command restores all records for a given topic to the same topic name.
 
 ## S3 Config
 
-Credentials can be configured directly via environment variables using:
-- AWS_ACCESS_KEY_ID     - Access key Id for S3. Can also be used for other S3 providers despite the name prefix.
-- AWS_SECRET_ACCESS_KEY - Secret access key for S3. Can also be used for other S3 providers despite the name prefix.
-
-if the credentials are not set a preconfigured profile is required. Choose the profile with environment variable `AWS_PROFILE`
-or the parameter `--profile`. The parameter takes priority.  
+S3 Config relies on profiles in `~/.aws/`. Either using the default or the profile set in `AWS_PROFILE`. 
+Use parameter `--profile` to choose a different profile.
 
 ### KafkaConfig
 

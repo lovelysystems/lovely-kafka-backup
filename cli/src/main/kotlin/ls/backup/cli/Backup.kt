@@ -78,9 +78,9 @@ class BackupBucket(val bucket: String, s3Config: S3Config, val kafkaConfig: Prop
             s3Config.endpoint?.let {
                 endpointUrl = Url.parse(it)
             }
-            if (s3Config.profile != null || System.getenv("AWS_PROFILE") != null) {
-                credentialsProvider = ProfileCredentialsProvider(profileName = s3Config.profile)
-            }
+            //if (s3Config.profile != null || System.getenv("AWS_PROFILE") != null) {
+            credentialsProvider = ProfileCredentialsProvider(profileName = s3Config.profile)
+
             region = s3Config.region
             forcePathStyle = true
         }
