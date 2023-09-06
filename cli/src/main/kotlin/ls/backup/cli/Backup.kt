@@ -74,6 +74,27 @@ data class DumpRecord(
     val value: ByteArray
 ) {
     fun withTopic(topic: String) = Record(topic, partition, offset, ts, key, value)
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as DumpRecord
+
+        if (partition != other.partition) return false
+        if (offset != other.offset) return false
+        if (ts != other.ts) return false
+        if (!key.contentEquals(other.key)) return false
+        return value.contentEquals(other.value)
+    }
+
+    override fun hashCode(): Int {
+        var result = partition
+        result = 31 * result + offset.hashCode()
+        result = 31 * result + ts.hashCode()
+        result = 31 * result + key.contentHashCode()
+        result = 31 * result + value.contentHashCode()
+        return result
+    }
 }
 
 data class Record(
@@ -83,7 +104,31 @@ data class Record(
     val ts: Long,
     val key: ByteArray,
     val value: ByteArray
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Record
+
+        if (topic != other.topic) return false
+        if (partition != other.partition) return false
+        if (offset != other.offset) return false
+        if (ts != other.ts) return false
+        if (!key.contentEquals(other.key)) return false
+        return value.contentEquals(other.value)
+    }
+
+    override fun hashCode(): Int {
+        var result = topic.hashCode()
+        result = 31 * result + partition
+        result = 31 * result + offset.hashCode()
+        result = 31 * result + ts.hashCode()
+        result = 31 * result + key.contentHashCode()
+        result = 31 * result + value.contentHashCode()
+        return result
+    }
+}
 
 fun InputStream.loadDump(): Sequence<DumpRecord> {
     val dis = DataInputStream(this)
@@ -116,7 +161,7 @@ fun InputStream.loadDump(): Sequence<DumpRecord> {
 
 data class S3Config(val credentials: Credentials?, val endpoint: String?, val region: String = "eu-west-1")
 
-class BackupBucket(private val bucket: String, s3Config: S3Config, val kafkaConfig: Properties) {
+class BackupBucket(val bucket: String, s3Config: S3Config, val kafkaConfig: Properties) {
 
     private val s3 = runBlocking {
         S3Client.fromEnvironment {
