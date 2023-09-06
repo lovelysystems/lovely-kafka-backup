@@ -1,6 +1,5 @@
 package ls.backup.cli.commands
 
-import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import kotlinx.cli.*
 import kotlinx.coroutines.runBlocking
 import ls.backup.cli.BackupBucket

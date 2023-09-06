@@ -1,10 +1,11 @@
 package ls.backup.cli
 
-import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import io.confluent.connect.s3.S3SinkConnectorConfig
 import io.confluent.connect.s3.storage.S3Storage
 import io.kotest.core.extensions.install
 import io.kotest.core.spec.style.FreeSpec
+import io.kotest.extensions.system.OverrideMode
+import io.kotest.extensions.system.SystemEnvironmentTestListener
 import io.kotest.extensions.system.withEnvironment
 import io.kotest.extensions.testcontainers.ContainerExtension
 import io.kotest.inspectors.forNone
@@ -14,6 +15,7 @@ import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.longs.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.longs.shouldBeLessThan
 import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import ls.kafka.connect.storage.format.ByteArrayRecordFormat
 import ls.testcontainers.minio.MinioContainer
 import ls.testcontainers.minio.MinioCredentials
@@ -31,14 +33,9 @@ import kotlin.time.toJavaDuration
 class RestoreTests : FreeSpec({
     val bucket = "backup-bucket"
     val credentials = MinioCredentials("minioadmin", "minioadmin")
-    val s3Credentials = Credentials("minioadmin", "minioadmin")
 
     val kafka = install(ContainerExtension(KraftKafkaContainer()))
 
-    val env = mapOf(
-        "AWS_ACCESS_KEY_ID" to credentials.accessKey,
-        "AWS_SECRET_ACCESS_KEY" to credentials.secretKey,
-    )
     val kafkaConfig = mapOf(
         "bootstrap.servers" to kafka.bootstrapServers,
         "auto.offset.reset" to "earliest",
@@ -81,12 +78,10 @@ class RestoreTests : FreeSpec({
             connectorConfig,
             "topics/$topic/year=${date.year}/month=${date.month}/day=${date.dayOfMonth}/$topic+0+$number"
         ).use { writer ->
-            withEnvironment(env) {
-                repeat(number) {
-                    writer.write(sampleRecord(topic, it, ts))
-                }
-                writer.commit()
+            repeat(number) {
+                writer.write(sampleRecord(topic, it, ts))
             }
+            writer.commit()
         }
     }
 
@@ -157,4 +152,14 @@ class RestoreTests : FreeSpec({
             }
         }
     }
-})
+
+}) {
+    override fun listeners() = listOf(
+        SystemEnvironmentTestListener(
+            mapOf(
+                "AWS_ACCESS_KEY_ID" to "minioadmin",
+                "AWS_SECRET_ACCESS_KEY" to "minioadmin",
+            ), OverrideMode.SetOrOverride
+        )
+    )
+}
