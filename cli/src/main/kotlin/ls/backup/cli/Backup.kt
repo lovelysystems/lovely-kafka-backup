@@ -15,8 +15,6 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.ByteArraySerializer
-import java.io.DataInputStream
-import java.io.EOFException
 import java.io.InputStream
 import java.util.*
 import kotlin.io.path.createTempFile
@@ -155,12 +153,14 @@ class BackupBucket(val bucket: String, s3Config: S3Config, val kafkaConfig: Prop
         }
     }
 
+    @Suppress("ForbiddenMethodCall")
     suspend fun restore(
         topicPattern: String,
         outputPrefix: String,
         timeWindow: TimeWindow = TimeWindow(null, null),
     ) {
         val records = getRecords(topicPattern).filter { record -> timeWindow.contains(record.ts) }
+        println("Found ${records.size} records to restore")
 
         KafkaProducer(
             kafkaConfig,
