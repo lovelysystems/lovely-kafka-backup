@@ -40,7 +40,7 @@ dependencyResolutionManagement {
             library("s3-kotlin-client", "aws.sdk.kotlin", "s3").version("0.32.0-beta")
 
             // CLI
-            library("kotlinx-cli", "org.jetbrains.kotlinx", "kotlinx-cli").version("0.3.6")
+            library("picocli", "info.picocli", "picocli").version("4.7.5")
 
             // Logging
             library("kotlin-logging-jvm", "io.github.oshai", "kotlin-logging-jvm").version("5.1.0")
