@@ -99,7 +99,7 @@ class RestoreTests : FreeSpec({
         return consumer.poll(5.seconds.toJavaDuration()).toList()
     }
 
-    val backupBucket = BackupBucket(bucket, S3Config(s3Credentials, minio.getHostAddress()), kafkaConfig)
+    val backupBucket = BackupBucket(bucket, S3Config(minio.getHostAddress()), kafkaConfig)
 
     "when restoring a full topic from backup " - {
         val sourceTopic = "test_some"

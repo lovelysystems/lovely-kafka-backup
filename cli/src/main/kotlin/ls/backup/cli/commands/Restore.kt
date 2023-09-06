@@ -29,54 +29,37 @@ class Restore : Subcommand("restore", "restore records from backup") {
         description = "Url or list of Urls of kafka servers to restore to."
     )
 
-    val pattern by option(
+    val topicPattern by option(
         ArgType.String,
         shortName = "p",
-        description = "Pattern for source topics to restore. If not set all topics in the bucket are restored"
-    ).default(".*")
+        description = "Pattern for source topics to restore."
+    ).required()
 
     val outputPrefix by option(
         ArgType.String,
         description = "Restored records are produced to the same topic. If this is set the output topic will be prefixed. Assumes the topic exists or is created."
     ).default("")
 
-    val start by option(
+    val fromTs by option(
         ArgType.String,
-        shortName = "s",
         description = "Start time from which to restore records. If not set all records are restored."
     )
 
-    val end by option(
+    val toTs by option(
         ArgType.String,
-        shortName = "e",
         description = "Until when records are restored. If not set all records up to now are restored."
     )
 
-    val awsAccessKeyId by option(
-        ArgType.String,
-    )
-
-    val awsSecretAccessKey by option(
-        ArgType.String
-    )
-
-
     override fun execute() = runBlocking {
-        val s3Config = S3Config(
-            if (awsAccessKeyId != null && awsSecretAccessKey != null) Credentials(
-                awsAccessKeyId!!,
-                awsSecretAccessKey!!
-            ) else null,
-            s3Endpoint
-        )
+        val s3Config = S3Config(s3Endpoint)
 
         val kafkaConfig =
             createPropertiesFromEnv(overrides = mapOf(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers).mapNotNull { (k, v) -> v?.let { k to v } }
                 .toMap())
 
         val backupBucket = BackupBucket(bucket, s3Config, kafkaConfig)
-        val timeWindow = TimeWindow(start?.let { parseDateInput(it) }, end?.let { parseDateInput(it) })
-        backupBucket.restore(pattern, outputPrefix, timeWindow)
+        val timeWindow = TimeWindow(fromTs?.let { parseDateInput(it) }, toTs?.let { parseDateInput(it) })
+        backupBucket.restore(topicPattern, outputPrefix, timeWindow)
     }
 }
 

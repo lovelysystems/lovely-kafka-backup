@@ -132,7 +132,7 @@ fun InputStream.loadDump(): Sequence<DumpRecord> {
     }
 }
 
-data class S3Config(val credentials: Credentials?, val endpoint: String?, val region: String = "eu-west-1")
+data class S3Config(val endpoint: String?, val region: String = "eu-west-1")
 
 class BackupBucket(val bucket: String, s3Config: S3Config, val kafkaConfig: Properties) {
 
@@ -140,11 +140,6 @@ class BackupBucket(val bucket: String, s3Config: S3Config, val kafkaConfig: Prop
         S3Client.fromEnvironment {
             s3Config.endpoint?.let {
                 endpointUrl = Url.parse(it)
-            }
-            s3Config.credentials?.let { credentials ->
-                credentialsProvider = StaticCredentialsProvider(
-                    credentials
-                )
             }
             region = s3Config.region
             forcePathStyle = true
