@@ -10,6 +10,7 @@ application {
 }
 
 dependencies {
+    implementation(project(":format"))
     implementation(libs.kafka.clients)
     implementation(libs.kotlinx.cli)
     implementation(libs.s3.kotlin.client)

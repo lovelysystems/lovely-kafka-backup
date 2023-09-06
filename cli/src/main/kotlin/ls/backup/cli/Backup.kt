@@ -9,6 +9,7 @@ import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.content.writeToFile
 import aws.smithy.kotlin.runtime.net.Url
 import kotlinx.coroutines.runBlocking
+import ls.kafka.model.DumpRecord
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -66,36 +67,8 @@ class BackupFile(name: String, inputStream: InputStream) {
     }
 }
 
-data class DumpRecord(
-    val partition: Int,
-    val offset: Long,
-    val ts: Long,
-    val key: ByteArray,
-    val value: ByteArray
-) {
-    fun withTopic(topic: String) = Record(topic, partition, offset, ts, key, value)
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
 
-        other as DumpRecord
-
-        if (partition != other.partition) return false
-        if (offset != other.offset) return false
-        if (ts != other.ts) return false
-        if (!key.contentEquals(other.key)) return false
-        return value.contentEquals(other.value)
-    }
-
-    override fun hashCode(): Int {
-        var result = partition
-        result = 31 * result + offset.hashCode()
-        result = 31 * result + ts.hashCode()
-        result = 31 * result + key.contentHashCode()
-        result = 31 * result + value.contentHashCode()
-        return result
-    }
-}
+fun DumpRecord.withTopic(topic: String) = Record(topic, partition, offset, ts, key, value)
 
 data class Record(
     val topic: String,
