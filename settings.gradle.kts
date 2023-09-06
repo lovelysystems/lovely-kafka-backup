@@ -10,7 +10,6 @@ pluginManagement {
         id("com.lovelysystems.gradle") version "1.12.0"
         id("com.github.johnrengelman.shadow") version "8.1.1"
         id("io.gitlab.arturbosch.detekt") version "1.23.1"
-        id("name.remal.check-updates") version "1.5.0"
     }
 }
 
