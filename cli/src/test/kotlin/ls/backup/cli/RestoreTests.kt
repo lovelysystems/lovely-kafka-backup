@@ -1,5 +1,7 @@
 package ls.backup.cli
 
+import aws.sdk.kotlin.runtime.auth.credentials.ProfileCredentialsProvider
+import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import io.confluent.connect.s3.S3SinkConnectorConfig
 import io.confluent.connect.s3.storage.S3Storage
 import io.kotest.core.extensions.install
@@ -14,6 +16,9 @@ import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.longs.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.longs.shouldBeLessThan
 import io.kotest.matchers.nulls.shouldNotBeNull
+import io.mockk.clearConstructorMockk
+import io.mockk.coEvery
+import io.mockk.mockkConstructor
 import ls.kafka.connect.storage.format.ByteArrayRecordFormat
 import ls.testcontainers.minio.MinioContainer
 import ls.testcontainers.minio.MinioCredentials
@@ -33,6 +38,15 @@ class RestoreTests : FreeSpec({
     val credentials = MinioCredentials("minioadmin", "minioadmin")
 
     val kafka = install(ContainerExtension(KraftKafkaContainer()))
+
+    mockkConstructor(ProfileCredentialsProvider::class)
+    coEvery {
+        anyConstructed<ProfileCredentialsProvider>().resolve(any())
+    } returns Credentials("minioadmin", "minioadmin")
+
+    afterSpec {
+        clearConstructorMockk(ProfileCredentialsProvider::class)
+    }
 
     val kafkaConfig = mapOf(
         "bootstrap.servers" to kafka.bootstrapServers,

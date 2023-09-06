@@ -58,6 +58,8 @@ dependencyResolutionManagement {
                 "kotest-extensions-testcontainers"
             ).version("2.0.2")
 
+            library("mockk", "io.mockk", "mockk").version("1.13.7")
+
             // Testcontainers
             version("testcontainers", "1.19.0")
             library("testcontainers", "org.testcontainers", "testcontainers").versionRef("testcontainers")

@@ -23,6 +23,7 @@ dependencies {
     testImplementation(testLibs.kotest.extensions.testcontainers)
     testImplementation(testLibs.testcontainers)
     testImplementation(testFixtures(project(":confluent-connect")))
+    testImplementation(testLibs.mockk)
 
     //so we use the actual sink logic to create data on minio for tests
     testImplementation(project(":confluent-connect"))
