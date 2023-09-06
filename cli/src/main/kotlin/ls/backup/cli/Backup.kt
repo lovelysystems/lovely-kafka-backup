@@ -8,6 +8,7 @@ import aws.sdk.kotlin.services.s3.model.GetObjectRequest
 import aws.smithy.kotlin.runtime.content.writeToFile
 import aws.smithy.kotlin.runtime.net.Url
 import kotlinx.coroutines.runBlocking
+import ls.kafka.io.RecordStreamReader
 import ls.kafka.model.DumpRecord
 import ls.kafka.model.Record
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
@@ -62,42 +63,11 @@ class BackupFile(name: String, inputStream: InputStream) {
         }
     }
 
-    fun records(): Sequence<DumpRecord> {
-        return stream.loadDump()
-    }
+    fun records(): List<DumpRecord> = RecordStreamReader(stream).readAll()
 }
 
 
 fun DumpRecord.withTopic(topic: String) = Record(topic, partition, offset, ts, key, value)
-
-fun InputStream.loadDump(): Sequence<DumpRecord> {
-    val dis = DataInputStream(this)
-    return sequence {
-        dis.use { s ->
-            while (true) {
-                val partition = try {
-                    s.readInt()
-                } catch (e: EOFException) {
-                    -1
-                }
-                if (partition == -1) {
-                    break
-                }
-                val offset = s.readLong()
-                val ts = s.readLong()
-                val keySize = s.readInt()
-                val key = ByteArray(keySize)
-                s.read(key)
-                val valueSize = s.readInt()
-                val value = ByteArray(valueSize)
-                s.read(value)
-
-                val record = DumpRecord(partition, offset, ts, key, value)
-                yield(record)
-            }
-        }
-    }
-}
 
 data class S3Config(val endpoint: String?, val profile: String? = null, val region: String = "eu-west-1")
 
