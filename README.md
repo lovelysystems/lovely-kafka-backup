@@ -25,6 +25,16 @@ for a list of all available properties.
 
 The connector can be configured using a configuration file. See `localdev` for an example configuration file.
 
+## Metrics
+
+Metrics are exported using the [Prometheus JMX Exporter](https://github.com/prometheus/jmx_exporter) and is
+configured to expose metrics in Prometheus format at `/metrics`.
+
+The following environment variables can be used to configure the exporter:
+
+* `METRICS_ENABLED`: Enable or disable the metrics exporter. Default: `true`
+* `METRICS_PORT`: The port the metrics are exposed on. Default: `9876`
+
 # Restore-CLI
 
 To restore records from a backup run the program. The restore reads backed up records from s3 and appends them to the
