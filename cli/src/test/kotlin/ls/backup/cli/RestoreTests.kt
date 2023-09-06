@@ -6,7 +6,6 @@ import io.kotest.core.extensions.install
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.extensions.system.OverrideMode
 import io.kotest.extensions.system.SystemEnvironmentTestListener
-import io.kotest.extensions.system.withEnvironment
 import io.kotest.extensions.testcontainers.ContainerExtension
 import io.kotest.inspectors.forNone
 import io.kotest.matchers.collections.shouldHaveSize
@@ -15,7 +14,6 @@ import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.longs.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.longs.shouldBeLessThan
 import io.kotest.matchers.nulls.shouldNotBeNull
-import io.kotest.matchers.shouldBe
 import ls.kafka.connect.storage.format.ByteArrayRecordFormat
 import ls.testcontainers.minio.MinioContainer
 import ls.testcontainers.minio.MinioCredentials

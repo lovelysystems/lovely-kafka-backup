@@ -40,21 +40,25 @@ The above command restores all records for a given topic to the same topic name.
 
 ### All options:
 
-| Option name        | Short option | Required                                    | Format              | Description                                                                                                                      |
-|--------------------|--------------|---------------------------------------------|---------------------|----------------------------------------------------------------------------------------------------------------------------------|
-| bucket             | b            | always                                      | String              | Bucket in which the backup is stored                                                                                             |
-| s3Endpoint         |              | If not restoring from AWS                   | Url                 | Endpoint for S3 backup storage                                                                                                   |
-| bootstrapServers   |              | If env `KAFKA_BOOTSTRAP_SERVERS` is not set | (list of) Urls      | Kafka cluster to restore the backup to                                                                                           |
-| fromTs             |              |                                             | yyyy-MM-ddThh:mm:ss | Start time of records to restore, if not set records from earliest available are restored. NOTE: times are always treated as UTC |
-| toTs               |              |                                             | yyyy-MM-ddThh:mm:ss | End time of records to restore, if not set records to latest available are restored. NOTE: times are always treated as UTC       |
-| topicPattern       | p            | always                                      | Regex               | Pattern for topic names restored to restore                                                                                      |
-| outputPrefix       | o            |                                             | String              | Records are restored to their original topic, if this is set they are restored to the topic with the prefix                      |
+| Option name      | Short option | Required                                    | Format              | Description                                                                                                                      |
+|------------------|--------------|---------------------------------------------|---------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| bucket           | b            | always                                      | String              | Bucket in which the backup is stored                                                                                             |
+| s3Endpoint       |              | If not restoring from AWS                   | Url                 | Endpoint for S3 backup storage                                                                                                   |
+| profile          |              |                                             | String              | Profile to user for S3 access. If not set uses `AWS_PROFILE` environment variable or the default profile.                        |
+| bootstrapServers |              | If env `KAFKA_BOOTSTRAP_SERVERS` is not set | (list of) Urls      | Kafka cluster to restore the backup to                                                                                           |
+| fromTs           |              |                                             | yyyy-MM-ddThh:mm:ss | Start time of records to restore, if not set records from earliest available are restored. NOTE: times are always treated as UTC |
+| toTs             |              |                                             | yyyy-MM-ddThh:mm:ss | End time of records to restore, if not set records to latest available are restored. NOTE: times are always treated as UTC       |
+| topicPattern     | p            | always                                      | Regex               | Pattern for topic names restored to restore                                                                                      |
+| outputPrefix     | o            |                                             | String              | Records are restored to their original topic, if this is set they are restored to the topic with the prefix                      |
 
-## EnvironmentVariables
+## S3 Config
 
-### Required:
+Credentials can be configured directly via environment variables using:
 - AWS_ACCESS_KEY_ID     - Access key Id for S3. Can also be used for other S3 providers despite the name prefix.
 - AWS_SECRET_ACCESS_KEY - Secret access key for S3. Can also be used for other S3 providers despite the name prefix.
+
+if the credentials are not set a preconfigured profile is required. Choose the profile with environment variable `AWS_PROFILE`
+or the parameter `--profile`. The parameter takes priority.  
 
 ### KafkaConfig
 

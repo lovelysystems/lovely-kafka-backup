@@ -49,8 +49,13 @@ class Restore : Subcommand("restore", "restore records from backup") {
         description = "Until when records are restored. If not set all records up to now are restored."
     )
 
+    val profile by option(
+        ArgType.String,
+        description = "The profile to use for s3 access."
+    )
+
     override fun execute() = runBlocking {
-        val s3Config = S3Config(s3Endpoint)
+        val s3Config = S3Config(s3Endpoint, profile)
 
         val kafkaConfig =
             createPropertiesFromEnv(overrides = mapOf(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers).mapNotNull { (k, v) -> v?.let { k to v } }

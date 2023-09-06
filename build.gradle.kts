@@ -48,7 +48,6 @@ fun getFormattedProjectName(project: Project): String = ":${project.name}"
  */
 task("detektAll", type = Detekt::class) {
     val includedTasks = setOf("detekt", "detektMain", "detektTest", "detektJvmMain", "detektJvmTest")
-
     subprojects.forEach { project ->
         project.getAllTasks(true).values.flatten().forEach { task ->
             if (includedTasks.contains(task.name)) {

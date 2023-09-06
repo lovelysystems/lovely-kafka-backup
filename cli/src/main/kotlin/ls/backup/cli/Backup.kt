@@ -1,5 +1,6 @@
 package ls.backup.cli
 
+import aws.sdk.kotlin.runtime.auth.credentials.ProfileCredentialsProvider
 import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.headBucket
 import aws.sdk.kotlin.services.s3.listObjectsV2
@@ -98,7 +99,7 @@ fun InputStream.loadDump(): Sequence<DumpRecord> {
     }
 }
 
-data class S3Config(val endpoint: String?, val region: String = "eu-west-1")
+data class S3Config(val endpoint: String?, val profile: String? = null, val region: String = "eu-west-1")
 
 class BackupBucket(val bucket: String, s3Config: S3Config, val kafkaConfig: Properties) {
 
@@ -106,6 +107,9 @@ class BackupBucket(val bucket: String, s3Config: S3Config, val kafkaConfig: Prop
         S3Client.fromEnvironment {
             s3Config.endpoint?.let {
                 endpointUrl = Url.parse(it)
+            }
+            if (s3Config.profile != null || System.getenv("AWS_PROFILE") != null) {
+                credentialsProvider = ProfileCredentialsProvider(profileName = s3Config.profile)
             }
             region = s3Config.region
             forcePathStyle = true
