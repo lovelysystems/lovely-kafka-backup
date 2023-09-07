@@ -1,5 +1,14 @@
 #!/bin/bash
 
+if [[ $1 ]] # if there is an argument assume its for the cli
+then
+  echo "args ${@}"
+  # To get rid of version number, assumes there is only one jar in the directory
+  JAR_NAME=$(ls /usr/share/java/backup-cli/cli*.jar | head -1)
+  java -jar /usr/share/java/backup-cli/${JAR_NAME} ${@}
+  exit
+fi
+
 # Kafka Connect configuration (defaults)
 export CONNECT_PLUGIN_PATH="/usr/share/java,/usr/share/confluent-hub-components"
 export CONNECT_BOOTSTRAP_SERVERS=${CONNECT_BOOTSTRAP_SERVERS:-"localhost:9092"}

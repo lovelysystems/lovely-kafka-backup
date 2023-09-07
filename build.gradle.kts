@@ -15,6 +15,9 @@ lovely {
         from(project("confluent-connect").tasks["shadowJar"]) {
             into("confluent-connect-libs")
         }
+        from(project("cli").tasks["shadowJar"]) {
+            into("backup-cli-libs")
+        }
     }
 }
 

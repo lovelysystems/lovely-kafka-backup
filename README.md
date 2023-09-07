@@ -40,6 +40,16 @@ The following environment variables can be used to configure the exporter:
 To restore records from a backup run the program. The restore reads backed up records from s3 and appends them to the
 target topics. Offsets of the records are not restored.
 
+## Running
+
+Using docker:
+
+```bash                     
+docker run lovelysystems/lovely-kafka-backup:dev restor --bucket <s3-backup-bucket> --topicPattern <topicPattern>
+```
+
+or gradle:
+
 ```bash
 
 ./gradlew :cli:run restore --bucket <s3-backup-bucket> --topicPattern <topicPattern>
@@ -63,7 +73,7 @@ The above command restores all records for a given topic to the same topic name.
 
 ## S3 Config
 
-S3 Config relies on profiles in `~/.aws/`. Either using the default or the profile set in `AWS_PROFILE`. 
+S3 Config relies on profiles in `~/.aws/`. Either using the default or the profile set in `AWS_PROFILE`.
 Use parameter `--profile` to choose a different profile.
 
 ### KafkaConfig
