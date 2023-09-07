@@ -17,6 +17,9 @@ lovely {
         }
         from(project("cli").tasks["shadowJar"]) {
             into("backup-cli-libs")
+            rename {
+                "cli.jar"
+            }
         }
     }
 }

@@ -2,9 +2,7 @@
 
 if [[ $1 ]] # if there is an argument assume its for the cli
 then
-  # To get rid of version number, assumes there is only one jar in the directory
-  JAR_NAME=$(ls /usr/share/java/backup-cli/cli*.jar | head -1)
-  java -jar ${JAR_NAME} ${@}
+  java -jar /opt/backup-cli/cli.jar ${@}
   exit
 fi
 
