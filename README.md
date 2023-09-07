@@ -45,7 +45,7 @@ target topics. Offsets of the records are not restored.
 Using docker:
 
 ```bash                     
-docker run lovelysystems/lovely-kafka-backup:dev restor --bucket <s3-backup-bucket> --topicPattern <topicPattern>
+docker run lovelysystems/lovely-kafka-backup:dev restore --bucket <s3-backup-bucket> --topicPattern <topicPattern>
 ```
 
 or gradle:
