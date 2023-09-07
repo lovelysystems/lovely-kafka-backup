@@ -42,7 +42,7 @@ target topics. Offsets of the records are not restored.
 
 ```bash
 
-./gradlew :cli:run --bucket <s3-backup-bucket> --topicPattern <topicPattern>
+./gradlew :cli:run restore --bucket <s3-backup-bucket> --topicPattern <topicPattern>
 
 ```
 
