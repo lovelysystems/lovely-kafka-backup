@@ -9,6 +9,9 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
+@Command
+class BackupCli
+
 class Restore {
 
     @Option(names = ["-b", "--bucket"], required = true, description = ["Bucket to restore from"])

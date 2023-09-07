@@ -12,7 +12,8 @@ import java.time.format.DateTimeParseException
 class CliParseTests : FreeSpec({
 
     val restore = Restore()
-    val cli = CommandLine(restore)
+    val cli = CommandLine(BackupCli())
+    cli.addSubcommand("restore", restore)
 
     "parsing " - {
         "should fail " - {
@@ -22,16 +23,22 @@ class CliParseTests : FreeSpec({
                 }
             }
 
+            "for restore without arguments" {
+                shouldThrowAny {
+                    cli.parseArgs("restore")
+                }
+            }
+
             "for missing parameter " - {
                 "bucket" {
                     shouldThrow<MissingParameterException> {
-                        cli.parseArgs("-p", "sometopicpattern")
+                        cli.parseArgs("restore", "-p", "sometopicpattern")
                     }
                 }
 
                 "pattern" {
                     shouldThrow<MissingParameterException> {
-                        cli.parseArgs("--bucket", "backup-bucket")
+                        cli.parseArgs("restore", "--bucket", "backup-bucket")
                     }
                 }
             }
@@ -39,14 +46,14 @@ class CliParseTests : FreeSpec({
             "for invalid parameter " - {
                 "fromTs" {
                     shouldThrow<DateTimeParseException> {
-                        cli.parseArgs("--bucket", "some", "-p", "topic", "--fromTs", "notaDateTime")
+                        cli.parseArgs("restore", "--bucket", "some", "-p", "topic", "--fromTs", "notaDateTime")
                         restore.execute()
                     }
                 }
 
                 "toTs" {
                     shouldThrow<DateTimeParseException> {
-                        cli.parseArgs("--bucket", "some", "-p", "topic", "--toTs", "notaDateTime")
+                        cli.parseArgs("restore", "--bucket", "some", "-p", "topic", "--toTs", "notaDateTime")
                         restore.execute()
                     }
                 }
@@ -55,13 +62,14 @@ class CliParseTests : FreeSpec({
 
         "should succeed" - {
             "for minimal arguments" {
-                cli.parseArgs("--bucket", "some", "-p", "topic")
+                cli.parseArgs("restore", "--bucket", "some", "-p", "topic")
                 restore.bucket shouldBe "some"
                 restore.topicPattern shouldBe "topic"
             }
 
             "for all arguments" {
                 cli.parseArgs(
+                    "restore",
                     "--bucket",
                     "someBucket",
                     "--s3Endpoint",
