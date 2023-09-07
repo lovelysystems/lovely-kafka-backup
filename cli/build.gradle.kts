@@ -12,7 +12,7 @@ application {
 dependencies {
     implementation(project(":format"))
     implementation(libs.kafka.clients)
-    implementation(libs.kotlinx.cli)
+    implementation(libs.picocli)
     implementation(libs.s3.kotlin.client)
     implementation(libs.apache.commons.compress)
 

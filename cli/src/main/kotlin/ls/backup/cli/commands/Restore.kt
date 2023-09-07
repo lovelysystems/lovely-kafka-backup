@@ -1,60 +1,44 @@
 package ls.backup.cli.commands
 
-import kotlinx.cli.*
-import kotlinx.coroutines.runBlocking
 import ls.backup.cli.BackupBucket
 import ls.backup.cli.S3Config
 import ls.backup.cli.TimeWindow
 import org.apache.kafka.clients.admin.AdminClientConfig
+import picocli.CommandLine.*
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
-@OptIn(ExperimentalCli::class)
-class Restore : Subcommand("restore", "restore records from backup") {
-    val bucket by option(
-        ArgType.String,
-        shortName = "b",
-        description = "Bucket to restore from"
-    ).required()
+@Command
+class BackupCli
 
-    val s3Endpoint by option(
-        ArgType.String,
-        description = "Url to S3. If not given defaults to AWS-S3"
-    )
+class Restore {
 
-    val bootstrapServers by option(
-        ArgType.String,
-        description = "Url or list of Urls of kafka servers to restore to."
-    )
+    @Option(names = ["-b", "--bucket"], required = true, description = ["Bucket to restore from"])
+    lateinit var bucket: String
 
-    val topicPattern by option(
-        ArgType.String,
-        shortName = "p",
-        description = "Pattern for source topics to restore."
-    ).required()
+    @Option(names = ["--s3Endpoint"], description = ["Url to S3. If not given defaults to AWS-S3"])
+    var s3Endpoint: String? = null
 
-    val outputPrefix by option(
-        ArgType.String,
-        description = "Restored records are produced to the same topic. If this is set the output topic will be prefixed. Assumes the topic exists or is created."
-    ).default("")
+    @Option(names=["--bootstrapServers"], description = ["Url or list of Urls of kafka servers to restore to."])
+    var bootstrapServers: String? = null
 
-    val fromTs by option(
-        ArgType.String,
-        description = "Start time from which to restore records. If not set all records are restored."
-    )
+    @Option(names=["-p", "--topicPattern"], required = true, description = ["Pattern for source topics to restore."])
+    lateinit var topicPattern: String
 
-    val toTs by option(
-        ArgType.String,
-        description = "Until when records are restored. If not set all records up to now are restored."
-    )
+    @Option(names=["--outputPrefix"], defaultValue = "", description = ["Restored records are produced to the same topic. If this is set the output topic will be prefixed. Assumes the topic exists or is created."])
+    lateinit var outputPrefix: String
 
-    val profile by option(
-        ArgType.String,
-        description = "The profile to use for s3 access."
-    )
+    @Option(names=["--fromTs"], description = ["Start time from which to restore records. If not set all records are restored."])
+    var fromTs: String? = null
 
-    override fun execute() = runBlocking {
+    @Option(names=["--toTs"], description = ["Until when records are restored. If not set all records up to now are restored."])
+    var toTs: String? = null
+
+    @Option(names=["--profile"], description = ["The profile to use for s3 access."])
+    var profile: String? = null
+
+    suspend fun execute() {
         val s3Config = S3Config(s3Endpoint, profile)
 
         val kafkaConfig =
@@ -65,6 +49,7 @@ class Restore : Subcommand("restore", "restore records from backup") {
         val timeWindow = TimeWindow(fromTs?.let { parseDateInput(it) }, toTs?.let { parseDateInput(it) })
         backupBucket.restore(topicPattern, outputPrefix, timeWindow)
     }
+
 }
 
 fun createPropertiesFromEnv(
