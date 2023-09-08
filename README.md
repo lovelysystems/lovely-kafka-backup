@@ -56,7 +56,7 @@ or gradle:
 
 ```bash
 
-./gradlew :cli:run restore --bucket <s3-backup-bucket> --topicPattern <topicPattern>
+./gradlew :cli:run --args="restore --bucket <s3-backup-bucket> --topicPattern <topicPattern>"
 
 ```
 
@@ -70,7 +70,7 @@ The above command restores all records for a given topic to the same topic name.
 | topicPattern     | p            | always                                      | Regex               | Pattern for topic names restored to restore                                                                                        |
 | s3Endpoint       |              | If not restoring from AWS                   | Url                 | Endpoint for S3 backup storage                                                                                                     |
 | bootstrapServers |              | If env `KAFKA_BOOTSTRAP_SERVERS` is not set | (list of) Urls      | Kafka cluster to restore the backup to                                                                                             |
-| outputPrefix     | o            |                                             | String              | Records are restored to their original topic, if this is set they are restored to the topic with the prefix                        |
+| outputPrefix     |              |                                             | String              | Records are restored to their original topic, if this is set they are restored to the topic with the prefix                        |
 | profile          |              |                                             | String              | Profile to user for S3 access. If not set uses `AWS_PROFILE` environment variable or the default profile.                          |
 | fromTs           |              |                                             | yyyy-MM-ddThh:mm:ss | Start time of records to restore, if not set records from earliest available are restored. NOTE: times are always treated as UTC   |
 | toTs             |              |                                             | yyyy-MM-ddThh:mm:ss | End time of records to restore, if not set records to latest available are restored. NOTE: times are always treated as UTC         |
