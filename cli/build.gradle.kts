@@ -2,11 +2,12 @@ plugins {
     kotlin("jvm")
     application
     `java-test-fixtures`
+    id("com.github.johnrengelman.shadow")
     id("io.gitlab.arturbosch.detekt")
 }
 
 application {
-    mainClass.set("ls.backup.cli.ApplicationKt")
+    mainClass.set("ls.kafka.backup.cli.ApplicationKt")
 }
 
 dependencies {

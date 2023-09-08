@@ -9,6 +9,7 @@ FROM confluentinc/cp-kafka-connect-base:7.4.0
 
 COPY --from=builder /tmp/jmx_exporter /opt/
 COPY confluent-connect-libs/ /usr/share/java/confluent-connect/
+COPY backup-cli-libs/ /opt/backup-cli/
 
 COPY kafka-connect.yml /opt/
 COPY entrypoint.sh /entrypoint.sh
