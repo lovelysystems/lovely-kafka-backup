@@ -7,7 +7,7 @@ plugins {
 }
 
 application {
-    mainClass.set("ls.backup.cli.ApplicationKt")
+    mainClass.set("ls.kafka.backup.cli.ApplicationKt")
 }
 
 dependencies {

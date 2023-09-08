@@ -22,7 +22,6 @@ services:
     user: "0"
     ports:
       - "9092:9092"
-      - "9093:9093"
     environment:
       # for configuration options see https://github.com/bitnami/containers/blob/main/bitnami/kafka/README.md#configuration
       # and prefix all configs from https://kafka.apache.org/documentation/#adminclientconfigs with KAFKA_CFG_

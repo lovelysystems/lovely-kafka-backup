@@ -75,7 +75,7 @@ The above command restores all records for a given topic to the same topic name.
 
 ## S3 Config
 
-S3 can be configured using the environemnt variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or by setting 
+S3 can be configured using the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or by setting 
 a profile in the parameter `--profile`. Profile takes priority.
 
 NOTE: configuration via profile is mostly useful for development and running the cli via `gradle :cli:run`. To use the it in docker
