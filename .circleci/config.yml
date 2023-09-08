@@ -1,0 +1,40 @@
+version: 2.1
+
+jobs:
+  test:
+    machine:
+      image: ubuntu-2204:2023.04.2
+    steps:
+      - run:
+          name: Install Java 11
+          command: |
+            sudo apt-get install openjdk-11-jdk
+            sudo update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java
+            sudo update-alternatives --set javac /usr/lib/jvm/java-11-openjdk-amd64/bin/javac
+            java -version
+      - checkout
+      - run:
+          name: Generate cache key
+          command: ./cache_checksum.sh /tmp/checksum.txt
+      - restore_cache:
+          key: gradle-{{ checksum "/tmp/checksum.txt" }}
+      - run:
+          name: Bootstrap Gradle
+          command: ./gradlew --version
+      - run:
+          name: Check
+          command: ./gradlew --console=plain check
+      - store_test_results:
+          path: build/test-results
+      - save_cache:
+          paths:
+            - ~/.gradle/caches
+            - ~/.gradle/wrapper
+          key: gradle-{{ checksum "/tmp/checksum.txt" }}
+
+workflows:
+  test:
+    jobs:
+      - test:
+          context:
+            - github-credentials
