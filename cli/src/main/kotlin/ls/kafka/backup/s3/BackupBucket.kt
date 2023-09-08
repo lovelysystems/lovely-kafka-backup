@@ -10,8 +10,8 @@ import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProviderChain
 import aws.smithy.kotlin.runtime.content.writeToFile
 import aws.smithy.kotlin.runtime.net.Url
 import kotlinx.coroutines.runBlocking
-import ls.kafka.backup.io.BackupFile
-import ls.kafka.backup.io.BackupFilePath
+import ls.kafka.backup.io.BackupFileContent
+import ls.kafka.backup.io.BackupFileDescription
 import ls.kafka.backup.TimeWindow
 import ls.kafka.model.DumpRecord
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -42,7 +42,7 @@ class BackupBucket(private val bucket: String, s3Config: S3Config, private val k
 
     private fun objectPrefix(topic: String) = "topics/$topic"
 
-    private suspend fun files(topicPattern: String): List<BackupFilePath> {
+    private suspend fun files(topicPattern: String): List<BackupFileDescription> {
         validate()
         val objects = s3.listObjectsV2 {
             bucket = this@BackupBucket.bucket
@@ -51,14 +51,14 @@ class BackupBucket(private val bucket: String, s3Config: S3Config, private val k
         }
 
         return objects.mapNotNull { obj ->
-            obj.key?.let { BackupFilePath(it) }
+            obj.key?.let { BackupFileDescription(it) }
         }
     }
 
-    private suspend fun backupFile(path: BackupFilePath): BackupFile {
+    private suspend fun backupFile(fileDescription: BackupFileDescription): BackupFileContent {
         val stream = s3.getObject(GetObjectRequest.invoke {
             bucket = this@BackupBucket.bucket
-            key = path.name
+            key = fileDescription.name
         }) { response ->
             val tempFile = createTempFile()
             val body = response.body ?: error("Got object with empty body")
@@ -69,7 +69,7 @@ class BackupBucket(private val bucket: String, s3Config: S3Config, private val k
             // https://github.com/awslabs/smithy-kotlin/pull/945
             // https://github.com/awslabs/aws-sdk-kotlin/issues/617
         }
-        return BackupFile(path.name, stream)
+        return BackupFileContent(fileDescription.name, stream)
     }
 
     private suspend fun find(
@@ -77,7 +77,7 @@ class BackupBucket(private val bucket: String, s3Config: S3Config, private val k
         partition: Int? = null,
         fromOffset: Long = 0L,
         toOffset: Long? = null
-    ): List<BackupFilePath> {
+    ): List<BackupFileDescription> {
         var backupFiles = files(topicPattern)
         if (toOffset != null) {
             backupFiles = backupFiles.takeWhile { it.startOffset <= toOffset }
