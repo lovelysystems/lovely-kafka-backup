@@ -1,9 +1,13 @@
 package ls.kafka.backup.io
 
 import io.kotest.core.spec.style.FreeSpec
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.paths.shouldExist
 import io.kotest.matchers.paths.shouldNotExist
 import io.kotest.matchers.shouldBe
+import ls.kafka.io.RecordStreamReader
+import ls.kafka.io.RecordStreamWriter
+import ls.kafka.model.DumpRecord
 import kotlin.io.path.*
 
 class EndEventInputStreamTests: FreeSpec({
@@ -45,6 +49,23 @@ class EndEventInputStreamTests: FreeSpec({
             tempFile.deleteIfExists() shouldBe true
         }
         String(stream.readAllBytes()) shouldBe "fleeting text content"
+
+        tempFile.shouldNotExist()
+    }
+
+    "should work for record data" {
+        val tempFile = createTempFile()
+        val writer = RecordStreamWriter(tempFile.outputStream())
+
+        repeat(100) {
+            writer.write(DumpRecord(0, it.toLong(), it.toLong(), "key$it".toByteArray(), "value$it".toByteArray()))
+        }
+
+        val reader = RecordStreamReader(tempFile.inputStream().buffered().onEnd {
+            tempFile.deleteIfExists()
+        })
+
+        reader.readAll().shouldHaveSize(100)
 
         tempFile.shouldNotExist()
     }
