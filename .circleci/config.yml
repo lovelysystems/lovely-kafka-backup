@@ -35,6 +35,4 @@ jobs:
 workflows:
   test:
     jobs:
-      - test:
-          context:
-            - github-credentials
+      - test
