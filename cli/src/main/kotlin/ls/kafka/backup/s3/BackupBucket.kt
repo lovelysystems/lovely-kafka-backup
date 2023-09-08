@@ -13,12 +13,14 @@ import kotlinx.coroutines.runBlocking
 import ls.kafka.backup.io.BackupFileContent
 import ls.kafka.backup.io.BackupFileDescription
 import ls.kafka.backup.TimeWindow
+import ls.kafka.backup.io.onEnd
 import ls.kafka.model.DumpRecord
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.ByteArraySerializer
 import java.util.*
 import kotlin.io.path.createTempFile
+import kotlin.io.path.deleteIfExists
 import kotlin.io.path.inputStream
 
 typealias BackupRecord = Pair<String, DumpRecord>
@@ -63,7 +65,9 @@ class BackupBucket(private val bucket: String, s3Config: S3Config, private val k
             val tempFile = createTempFile()
             val body = response.body ?: error("Got object with empty body")
             body.writeToFile(tempFile)
-            tempFile.inputStream()
+            tempFile.inputStream().buffered().onEnd {
+                tempFile.deleteIfExists()
+            }
             //TODO remove tempfile once the sdk has a released version which directly gives the input stream.
             // Fix is already merged in the sdk but not released, see:
             // https://github.com/awslabs/smithy-kotlin/pull/945
