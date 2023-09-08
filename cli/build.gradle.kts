@@ -2,12 +2,36 @@ plugins {
     kotlin("jvm")
     application
     `java-test-fixtures`
-    id("com.github.johnrengelman.shadow")
     id("io.gitlab.arturbosch.detekt")
+    id("org.graalvm.buildtools.native")
+    kotlin("kapt")
 }
 
 application {
     mainClass.set("ls.kafka.backup.cli.ApplicationKt")
+}
+
+graalvmNative {
+
+    if (System.getenv("USE_NATIVE_IMAGE_JAVA_PLATFORM_MODULE_SYSTEM") != "false") {
+        error("set USE_NATIVE_IMAGE_JAVA_PLATFORM_MODULE_SYSTEM to false")
+        // this workaround is intended for removal by graal, see https://www.graalvm.org/release-notes/22_2/
+    }
+
+    binaries {
+        named("main") {
+            javaLauncher.set(javaToolchains.launcherFor {
+                languageVersion.set(JavaLanguageVersion.of(11))
+                vendor.set(JvmVendorSpec.matching("GraalVm"))
+            })
+        }
+    }
+}
+
+kapt {
+    arguments {
+        arg("project", "${project.group}/${project.name}")
+    }
 }
 
 dependencies {
@@ -17,6 +41,8 @@ dependencies {
     implementation(libs.kafka.clients)
     implementation(libs.kafka.storage)
     implementation(libs.picocli)
+    implementation(libs.picocli.codegen)
+    kapt(libs.picocli.codegen)
     implementation(libs.s3.kotlin.client)
     implementation(libs.apache.commons.compress)
 

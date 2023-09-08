@@ -2,7 +2,7 @@
 
 if [[ $1 ]] # if there is an argument assume its for the cli
 then
-  java -jar /opt/backup-cli/cli.jar ${@}
+  /opt/backup-cli/cli ${@}
   exit
 fi
 

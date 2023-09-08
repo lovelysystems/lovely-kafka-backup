@@ -15,10 +15,11 @@ lovely {
         from(project("confluent-connect").tasks["shadowJar"]) {
             into("confluent-connect-libs")
         }
-        from(project("cli").tasks["shadowJar"]) {
+        from(project("cli").tasks["nativeCompile"]) {
             into("backup-cli-libs")
+            duplicatesStrategy = DuplicatesStrategy.INCLUDE
             rename {
-                "cli.jar"
+                "cli"
             }
         }
     }

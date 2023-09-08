@@ -10,6 +10,8 @@ pluginManagement {
         id("com.lovelysystems.gradle") version "1.12.0"
         id("com.github.johnrengelman.shadow") version "8.1.1"
         id("io.gitlab.arturbosch.detekt") version "1.23.1"
+        id("org.graalvm.buildtools.native") version "0.9.25"
+        kotlin("kapt") version "1.9.10"
     }
 }
 
@@ -49,6 +51,7 @@ dependencyResolutionManagement {
 
             // CLI
             library("picocli", "info.picocli", "picocli").version("4.7.5")
+            library("picocli-codegen", "info.picocli", "picocli-codegen").version("4.7.5")
 
             // Logging
             version("slf4j", "2.0.9")
