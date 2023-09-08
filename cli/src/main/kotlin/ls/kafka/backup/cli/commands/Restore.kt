@@ -1,8 +1,8 @@
-package ls.backup.cli.commands
+package ls.kafka.backup.cli.commands
 
-import ls.backup.cli.BackupBucket
-import ls.backup.cli.S3Config
-import ls.backup.cli.TimeWindow
+import ls.kafka.backup.s3.BackupBucket
+import ls.kafka.backup.s3.S3Config
+import ls.kafka.backup.TimeWindow
 import org.apache.kafka.clients.admin.AdminClientConfig
 import picocli.CommandLine.*
 import java.time.LocalDateTime

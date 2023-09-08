@@ -1,7 +1,7 @@
-package ls.backup.cli
+package ls.kafka.backup.cli
 
-import ls.backup.cli.commands.BackupCli
-import ls.backup.cli.commands.Restore
+import ls.kafka.backup.cli.commands.BackupCli
+import ls.kafka.backup.cli.commands.Restore
 import picocli.CommandLine
 
 suspend fun main(args: Array<String>) {

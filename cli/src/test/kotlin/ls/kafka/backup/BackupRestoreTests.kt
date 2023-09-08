@@ -1,4 +1,4 @@
-package ls.backup.cli
+package ls.kafka.backup
 
 import aws.sdk.kotlin.runtime.auth.credentials.ProfileCredentialsProvider
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
@@ -19,7 +19,10 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.mockk.clearConstructorMockk
 import io.mockk.coEvery
 import io.mockk.mockkConstructor
+import ls.kafka.backup.s3.BackupBucket
+import ls.kafka.backup.s3.S3Config
 import ls.kafka.connect.storage.format.ByteArrayRecordFormat
+import ls.testcontainers.kafka.KafkaKraftContainer
 import ls.testcontainers.minio.MinioContainer
 import ls.testcontainers.minio.MinioCredentials
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -29,15 +32,17 @@ import org.apache.kafka.common.record.TimestampType
 import org.apache.kafka.common.serialization.ByteArrayDeserializer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.connect.sink.SinkRecord
-import java.time.*
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
-class RestoreTests : FreeSpec({
+class BackupRestoreTests : FreeSpec({
     val bucket = "backup-bucket"
     val credentials = MinioCredentials("minioadmin", "minioadmin")
 
-    val kafka = install(ContainerExtension(KraftKafkaContainer()))
+    val kafka = install(ContainerExtension(KafkaKraftContainer()))
 
     mockkConstructor(ProfileCredentialsProvider::class)
     coEvery {

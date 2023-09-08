@@ -1,4 +1,4 @@
-package ls.backup.cli.commands
+package ls.kafka.backup.cli.commands
 
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
