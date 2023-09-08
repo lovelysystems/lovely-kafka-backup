@@ -1,18 +1,17 @@
-package ls.backup.cli
+package ls.testcontainers.kafka
 
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
 import java.net.ServerSocket
 
-fun findFreePort() = ServerSocket(0).use { it.localPort }
-class KraftKafkaContainer(
-    val hostPort: Int = findFreePort()
+class KafkaKraftContainer(
+    private val hostPort: Int = ServerSocket(0).use { it.localPort }  // find a free port
     //Cant rely on Testcontainer mapping because ADVERTISED_LISTENERS
     // need to be configured with an address that is reachable by the client, if relying on Testcontainer
     // mapping we won't know the outward port until the container has started
-) : GenericContainer<KraftKafkaContainer>(DockerImageName.parse("bitnami/kafka:3.4.0")) {
+) : GenericContainer<KafkaKraftContainer>(DockerImageName.parse("bitnami/kafka:3.4.0")) {
 
-    val kafkaInternalPort = 9092
+    private val kafkaInternalPort = 9092
 
     val bootstrapServers
         get() = "PLAINTEXT://${this.host}:$hostPort"

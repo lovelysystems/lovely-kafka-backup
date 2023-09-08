@@ -1,4 +1,4 @@
-package ls.backup.cli
+package ls.kafka.backup.s3
 
 import aws.sdk.kotlin.runtime.auth.credentials.ProfileCredentialsProvider
 import aws.sdk.kotlin.services.s3.S3Client
@@ -8,75 +8,26 @@ import aws.sdk.kotlin.services.s3.model.GetObjectRequest
 import aws.smithy.kotlin.runtime.content.writeToFile
 import aws.smithy.kotlin.runtime.net.Url
 import kotlinx.coroutines.runBlocking
-import ls.kafka.io.RecordStreamReader
+import ls.kafka.backup.io.BackupFile
+import ls.kafka.backup.io.BackupFilePath
+import ls.kafka.backup.TimeWindow
 import ls.kafka.model.DumpRecord
-import ls.kafka.model.Record
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.ByteArraySerializer
-import java.io.InputStream
 import java.util.*
 import kotlin.io.path.createTempFile
 import kotlin.io.path.inputStream
 
-data class BackupFilePath(val name: String) {
-    val topic: String
-    val partition: Int
-    val startOffset: Long
+typealias BackupRecord = Pair<String, DumpRecord>
 
-    init {
-        name.substringBefore(".").split("+").let { nameParts ->
-            topic = nameParts[0]
-            partition = nameParts[1].toInt()
-            startOffset = nameParts[2].toLong()
-        }
-    }
-
-    override fun toString(): String {
-        return "BackupFilePath(name='$name')"
-    }
-}
-
-class BackupFile(name: String, inputStream: InputStream) {
-
-    val compressed = name.endsWith(".gz")
-
-    val topic: String
-    val partition: Int
-    val startOffset: Long
-
-    private val stream: InputStream
-
-    init {
-        name.split("/").last().substringBefore(".").split("+").let { nameParts ->
-            topic = nameParts[0]
-            partition = nameParts[1].toInt()
-            startOffset = nameParts[2].toLong()
-        }
-        stream = if (compressed) {
-            GzipCompressorInputStream(inputStream)
-        } else {
-            inputStream
-        }
-    }
-
-    fun records(): List<DumpRecord> = RecordStreamReader(stream).readAll()
-}
-
-
-fun DumpRecord.withTopic(topic: String) = Record(topic, partition, offset, ts, key, value)
-
-data class S3Config(val endpoint: String?, val profile: String? = null, val region: String = "eu-west-1")
-
-class BackupBucket(val bucket: String, s3Config: S3Config, val kafkaConfig: Properties) {
+class BackupBucket(private val bucket: String, s3Config: S3Config, private val kafkaConfig: Properties) {
 
     private val s3 = runBlocking {
         S3Client.fromEnvironment {
             s3Config.endpoint?.let {
                 endpointUrl = Url.parse(it)
             }
-            //if (s3Config.profile != null || System.getenv("AWS_PROFILE") != null) {
             credentialsProvider = ProfileCredentialsProvider(profileName = s3Config.profile)
 
             region = s3Config.region
@@ -86,7 +37,7 @@ class BackupBucket(val bucket: String, s3Config: S3Config, val kafkaConfig: Prop
 
     private fun objectPrefix(topic: String) = "topics/$topic"
 
-    suspend fun files(topicPattern: String): List<BackupFilePath> {
+    private suspend fun files(topicPattern: String): List<BackupFilePath> {
         validate()
         val objects = s3.listObjectsV2 {
             bucket = this@BackupBucket.bucket
@@ -99,7 +50,7 @@ class BackupBucket(val bucket: String, s3Config: S3Config, val kafkaConfig: Prop
         }
     }
 
-    suspend fun backupFile(path: BackupFilePath): BackupFile {
+    private suspend fun backupFile(path: BackupFilePath): BackupFile {
         val stream = s3.getObject(GetObjectRequest.invoke {
             bucket = this@BackupBucket.bucket
             key = path.name
@@ -116,7 +67,7 @@ class BackupBucket(val bucket: String, s3Config: S3Config, val kafkaConfig: Prop
         return BackupFile(path.name, stream)
     }
 
-    suspend fun find(
+    private suspend fun find(
         topicPattern: String,
         partition: Int? = null,
         fromOffset: Long = 0L,
@@ -136,30 +87,28 @@ class BackupBucket(val bucket: String, s3Config: S3Config, val kafkaConfig: Prop
         }
     }
 
-    suspend fun getRecords(
+    private suspend fun getRecords(
         topicPattern: String,
         partition: Int? = null,
-    ): List<Record> = find(
+    ): List<BackupRecord> = find(
         topicPattern,
         partition = partition,
     ).map { backupFile(it) }.flatMap { backupFile ->
-        backupFile.records().map { it.withTopic(backupFile.topic) }
+        backupFile.records().map { BackupRecord(backupFile.topic, it) }
     }
 
-
-    suspend fun validate() {
+    private suspend fun validate() {
         s3.headBucket {
             bucket = this@BackupBucket.bucket
         }
     }
 
-    @Suppress("ForbiddenMethodCall")
     suspend fun restore(
         topicPattern: String,
         outputPrefix: String,
         timeWindow: TimeWindow = TimeWindow(null, null),
     ) {
-        val records = getRecords(topicPattern).filter { record -> timeWindow.contains(record.ts) }
+        val records = getRecords(topicPattern).filter { tr -> timeWindow.contains(tr.second.ts) }
         println("Found ${records.size} records to restore")
 
         KafkaProducer(
@@ -167,10 +116,10 @@ class BackupBucket(val bucket: String, s3Config: S3Config, val kafkaConfig: Prop
             ByteArraySerializer(),
             ByteArraySerializer()
         ).use { producer ->
-            records.forEach { record ->
+            records.forEach { (topic, record) ->
                 producer.send(
                     ProducerRecord(
-                        outputPrefix + record.topic,
+                        outputPrefix + topic,
                         null,
                         record.ts,
                         record.key,
@@ -180,8 +129,4 @@ class BackupBucket(val bucket: String, s3Config: S3Config, val kafkaConfig: Prop
             }
         }
     }
-}
-
-data class TimeWindow(val from: Long?, val to: Long?) {
-    fun contains(ts: Long): Boolean = (from == null || ts >= from) && (to == null || ts <= to)
 }

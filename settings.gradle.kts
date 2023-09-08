@@ -1,7 +1,7 @@
 import java.net.URI
 
 rootProject.name = "lovely-kafka-backup"
-include("confluent-connect", "format", "cli")
+include("confluent-connect", "format", "cli", "testing")
 
 pluginManagement {
     val kotlinVersion: String by settings
@@ -63,7 +63,6 @@ dependencyResolutionManagement {
             // Testcontainers
             version("testcontainers", "1.19.0")
             library("testcontainers", "org.testcontainers", "testcontainers").versionRef("testcontainers")
-            library("testcontainers-kafka", "org.testcontainers", "kafka").versionRef("testcontainers")
         }
     }
 }
