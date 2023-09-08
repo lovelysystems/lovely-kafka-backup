@@ -1,5 +1,7 @@
 # lovely-kafka-backup
 
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/lovelysystems/lovely-kafka-backup/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/lovelysystems/lovely-kafka-backup/tree/master)
+
 This application is meant to be used as a backup tool for Kafka. It comes with connectors to read and write data from
 Kafka to different storage systems and provides a CLI for manual backup and restore operations.
 
