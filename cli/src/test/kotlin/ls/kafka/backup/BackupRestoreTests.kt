@@ -9,13 +9,8 @@ import io.kotest.core.spec.style.FreeSpec
 import io.kotest.extensions.system.OverrideMode
 import io.kotest.extensions.system.SystemEnvironmentTestListener
 import io.kotest.extensions.testcontainers.ContainerExtension
-import io.kotest.inspectors.forNone
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
-import io.kotest.matchers.longs.shouldBeGreaterThan
-import io.kotest.matchers.longs.shouldBeGreaterThanOrEqual
-import io.kotest.matchers.longs.shouldBeLessThan
-import io.kotest.matchers.nulls.shouldNotBeNull
 import io.mockk.clearConstructorMockk
 import io.mockk.coEvery
 import io.mockk.mockkConstructor
@@ -32,9 +27,6 @@ import org.apache.kafka.common.record.TimestampType
 import org.apache.kafka.common.serialization.ByteArrayDeserializer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.connect.sink.SinkRecord
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
@@ -58,24 +50,14 @@ class BackupRestoreTests : FreeSpec({
         "auto.offset.reset" to "earliest",
     ).toProperties()
 
-    val config = mapOf(
-        "s3.bucket.name" to bucket,
-        "format.class" to ByteArrayRecordFormat::class.qualifiedName,
-        "format.bytearray.extension" to ".bytea",
-        "flush.size" to "1",
-        "storage.class" to "io.confluent.connect.s3.storage.S3Storage",
-        "partitioner.class" to "io.confluent.connect.storage.partitioner.DailyPartitioner",
-        "bootstrap.servers" to kafka.bootstrapServers
-    )
-
-    fun sampleRecord(topic: String, number: Int, ts: Long) = SinkRecord(
+    fun sampleRecord(topic: String, offset: Long, ts: Long, partition: Int) = SinkRecord(
         topic,
-        1,
+        partition,
         null,
         "key".toByteArray(),
         null,
-        "value_$number".toByteArray(),
-        10L * number,
+        "value_$offset".toByteArray(),
+        offset,
         ts,
         TimestampType.CREATE_TIME
     )
@@ -84,19 +66,24 @@ class BackupRestoreTests : FreeSpec({
         createBucket(bucket)
     }
 
-    fun writeSampleRecords(topic: String, number: Int, ts: Long = 124515L) {
-        val connectorConfig = S3SinkConnectorConfig(config)
+    fun writeSampleRecords(topic: String, startOffset: Long, rowCount: Int, partition: Int = 0) {
+        val connectorConfig = S3SinkConnectorConfig(
+            mapOf(
+                "s3.bucket.name" to bucket,
+                "format.class" to ByteArrayRecordFormat::class.qualifiedName,
+                "flush.size" to "10",
+                "storage.class" to "io.confluent.connect.s3.storage.S3Storage",
+            )
+        )
         val s3Storage = S3Storage(connectorConfig, minio.getHostAddress())
-
-        val date = LocalDate.ofInstant(Instant.ofEpochMilli(ts), ZoneId.of("UTC"))
 
         val formatter = ByteArrayRecordFormat(s3Storage)
         formatter.recordWriterProvider.getRecordWriter(
             connectorConfig,
-            "topics/$topic/year=${date.year}/month=${date.month}/day=${date.dayOfMonth}/$topic+0+$number"
+            "topics/$topic/$topic+$partition+$startOffset"
         ).use { writer ->
-            repeat(number) {
-                writer.write(sampleRecord(topic, it, ts))
+            repeat(rowCount) {
+                writer.write(sampleRecord(topic, startOffset + it, it * 1000L, partition))
             }
             writer.commit()
         }
@@ -114,59 +101,87 @@ class BackupRestoreTests : FreeSpec({
     val backupBucket = BackupBucket(bucket, S3Config(minio.getHostAddress()), kafkaConfig)
 
     "when restoring a full topic from backup " - {
-        val sourceTopic = "test_some"
-        val recordCount = 300
-        writeSampleRecords(sourceTopic, recordCount)
+        val sourceTopic = "test_restore_full_topic"
+        val recordCount = 100
+        writeSampleRecords(sourceTopic, 0, recordCount)
 
         "to new topic" - {
-            val prefix = "other_prefix_"
-            backupBucket.restore(sourceTopic, prefix)
+            backupBucket.restore("topics/$sourceTopic", targetTopic = "restored_test_restore_full_topic")
 
             "then created target topic should contain all records from backup" {
-                consumeAllRecords(prefix + sourceTopic).shouldNotBeNull().shouldHaveSize(recordCount)
+                consumeAllRecords("restored_test_restore_full_topic").shouldHaveSize(recordCount)
             }
         }
     }
 
     "when restoring without prefix" - {
         val topic = "test_topic"
-        val recordCount = 300
-        writeSampleRecords(topic, recordCount)
+        val recordCount = 100
+        writeSampleRecords(topic, 0, recordCount)
+
         "restored topic name should be the same and contain records" {
-            backupBucket.restore(topic, "")
-            consumeAllRecords(topic).shouldNotBeNull().shouldHaveSize(recordCount)
+            backupBucket.restore()
+            consumeAllRecords(topic).shouldHaveSize(recordCount)
         }
     }
 
-    "when restoring with time window" - {
-        val sourceTopic = "windowed_test"
-        val recordsPerDay = 100
-        val now = Instant.now()
-        writeSampleRecords(sourceTopic, recordsPerDay, now.toEpochMilli())
-        writeSampleRecords(sourceTopic, recordsPerDay, now.toEpochMilli() - 24 * 60 * 60 * 1000)
-        writeSampleRecords(sourceTopic, recordsPerDay, now.toEpochMilli() + 24 * 60 * 60 * 1000)
+    "when restoring with offset window" - {
+        val topic = "offset_window_test"
+        val recordCount = 100
+        writeSampleRecords(topic, 0, recordCount)
 
-        val prefix = "some"
-        val targetTopic = prefix + sourceTopic
+        val restoreTopicPrefix = "restored_offset_window_"
 
-        val timeWindow = TimeWindow(now.toEpochMilli(), now.toEpochMilli() + 23 * 60 * 60 * 1000)
-        backupBucket.restore(sourceTopic, prefix, timeWindow)
-        "then records in the time window should be restored" {
-            consumeAllRecords(targetTopic).shouldNotBeNull().shouldHaveSize(recordsPerDay).forEach { record ->
-                record.timestamp() shouldBeGreaterThanOrEqual timeWindow.from!!
-                record.timestamp() shouldBeLessThan timeWindow.to!!
-            }
+        "then records within the offset window should be restored" {
+            val restoreTopic = restoreTopicPrefix + "10_70"
+            backupBucket.restore(
+                "topics/$topic",
+                targetTopic = restoreTopic,
+                fromOffset = 10L,
+                toOffset = 70L
+            )
+            consumeAllRecords(restoreTopic).shouldHaveSize(60)
         }
 
-        "then records before the time window should be ignored" {
-            consumeAllRecords(targetTopic).shouldNotBeNull().forNone { record ->
-                record.timestamp() shouldBeLessThan timeWindow.from!!
-            }
+        "open end offset window should restore all records from the start offset" {
+            val restoreTopic = restoreTopicPrefix + "40"
+            backupBucket.restore(
+                "topics/$topic",
+                targetTopic = restoreTopic,
+                fromOffset = 40L,
+            )
+            consumeAllRecords(restoreTopic).shouldHaveSize(60)
         }
-        "then records after the time window should be ignored" {
-            consumeAllRecords(targetTopic).shouldNotBeNull().forNone { record ->
-                record.timestamp() shouldBeGreaterThan timeWindow.to!!
-            }
+
+        "closed end offset window should restore all records from beginning" {
+            val restoreTopic = restoreTopicPrefix + "0_50"
+            backupBucket.restore(
+                "topics/$topic",
+                targetTopic = restoreTopic,
+                toOffset = 50L
+            )
+            consumeAllRecords(restoreTopic).shouldHaveSize(50)
+        }
+    }
+
+    "when restoring with partition" - {
+        val topic = "partition_test"
+        val recordCount = 1
+
+        // write records to partition #1
+        writeSampleRecords(topic, 0, recordCount, partition = 1)
+        writeSampleRecords(topic, 0, recordCount, partition = 2)
+
+        val restoreTopicPrefix = "restored_partition_"
+
+        "then records within the partition should be restored" {
+            val restoreTopic = restoreTopicPrefix + "1"
+            backupBucket.restore(
+                "topics/$topic",
+                targetTopic = restoreTopic,
+                partition = 1
+            )
+            consumeAllRecords(restoreTopic).shouldHaveSize(recordCount)
         }
     }
 

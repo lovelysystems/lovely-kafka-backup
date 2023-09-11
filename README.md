@@ -18,11 +18,13 @@ Kafka to different storage systems and provides a CLI for manual backup and rest
 
 ## Kafka S3 Backup Connector Setup
 
-This connector uses the [Kafka Connect S3 Connector](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html)
+This connector uses
+the [Kafka Connect S3 Connector](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html)
 to backup Kafka topics to S3. It uses the [Kafka Connect API](https://kafka.apache.org/documentation/#connect) to
 stream data from Kafka.
 
-The connector is created automatically when the application is started. See the [Configuration Properties](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html#configuration-properties)
+The connector is created automatically when the application is started. See
+the [Configuration Properties](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html#configuration-properties)
 for a list of all available properties.
 
 The connector can be configured using a configuration file. See `localdev` for an example configuration file.
@@ -47,7 +49,7 @@ target topics. Offsets of the records are not restored.
 Using docker:
 
 ```bash                     
-docker run --network host lovelysystems/lovely-kafka-backup:dev restore --bucket <s3-backup-bucket> --topicPattern <topicPattern>
+docker run --network host lovelysystems/lovely-kafka-backup:dev restore --bucket <s3-backup-bucket> --prefix <prefix>
 ```
 
 NOTE: network host is required if kafka is also running locally in a container
@@ -56,7 +58,7 @@ or gradle:
 
 ```bash
 
-./gradlew :cli:run --args="restore --bucket <s3-backup-bucket> --topicPattern <topicPattern>"
+./gradlew :cli:run --args="restore --bucket <s3-backup-bucket> --prefix <prefix>"
 
 ```
 
@@ -64,23 +66,26 @@ The above command restores all records for a given topic to the same topic name.
 
 ### All options:
 
-| Option name      | Short option | Required                                    | Format              | Description                                                                                                                        |
-|------------------|--------------|---------------------------------------------|---------------------|------------------------------------------------------------------------------------------------------------------------------------|
-| bucket           | b            | always                                      | String              | Bucket in which the backup is stored                                                                                               |
-| topicPattern     | p            | always                                      | Regex               | Pattern for topic names restored to restore                                                                                        |
-| s3Endpoint       |              | If not restoring from AWS                   | Url                 | Endpoint for S3 backup storage                                                                                                     |
-| bootstrapServers |              | If env `KAFKA_BOOTSTRAP_SERVERS` is not set | (list of) Urls      | Kafka cluster to restore the backup to                                                                                             |
-| outputPrefix     |              |                                             | String              | Records are restored to their original topic, if this is set they are restored to the topic with the prefix                        |
-| profile          |              |                                             | String              | Profile to user for S3 access. If not set uses `AWS_PROFILE` environment variable or the default profile.                          |
-| fromTs           |              |                                             | yyyy-MM-ddThh:mm:ss | Start time of records to restore, if not set records from earliest available are restored. NOTE: times are always treated as UTC   |
-| toTs             |              |                                             | yyyy-MM-ddThh:mm:ss | End time of records to restore, if not set records to latest available are restored. NOTE: times are always treated as UTC         |
+| Option name      | Short option | Required                                    | Format         | Description                                                                                                  |
+|------------------|--------------|---------------------------------------------|----------------|--------------------------------------------------------------------------------------------------------------|
+| bucket           | b            | always                                      | String         | Bucket in which the backup is stored                                                                         |
+| prefix           | p            |                                             | String         | Limit S3 objects that begin with the specified prefix.                                                       |
+| key              | k            |                                             | Regex          | Allows to filter S3 objects by the specified key pattern.                                                    |
+| partition        |              |                                             | Number         | Partition of the source topics to restore.                                                                   |
+| from             |              |                                             | Number         | Start Kafka offset of objects to restore. If not set, records from earliest available offset are restored.   |
+| to               |              |                                             | Number         | End Kafka offset of records to restore (exclusive). If not set, records to latest available are restored.    |
+| s3Endpoint       |              | If not restoring from AWS                   | Url            | Endpoint for S3 backup storage                                                                               |
+| bootstrapServers |              | If env `KAFKA_BOOTSTRAP_SERVERS` is not set | (list of) Urls | Kafka cluster to restore the backup to                                                                       |
+| topic            | t            |                                             | String         | The target topic where records are restored to. Otherwise topics get restored into their original topic name |
+| profile          |              |                                             | String         | Profile to user for S3 access. If not set uses `AWS_PROFILE` environment variable or the default profile.    |
 
 ## S3 Config
 
-S3 can be configured using the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or by setting 
+S3 can be configured using the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or by setting
 a profile in the parameter `--profile`. Profile takes priority.
 
-NOTE: configuration via profile is mostly useful for development and running the cli via `gradle :cli:run`. To use the it in docker
+NOTE: configuration via profile is mostly useful for development and running the cli via `gradle :cli:run`. To use the
+it in docker
 the config file from `~/.aws` would need to be mounted into the container.
 
 ### KafkaConfig
