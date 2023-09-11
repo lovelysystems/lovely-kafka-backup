@@ -23,6 +23,13 @@ dependencyResolutionManagement {
 
     versionCatalogs {
         create("libs") {
+            version("kotlinx-coroutines", "1.7.3")
+            library(
+                "kotlinx-coroutines-core",
+                "org.jetbrains.kotlinx",
+                "kotlinx-coroutines-core"
+            ).version("kotlinx-coroutines")
+
             // Apache Kafka
             version("kafka", "3.5.1")
             library("kafka-connect-runtime", "org.apache.kafka", "connect-runtime").versionRef("kafka")
@@ -37,14 +44,15 @@ dependencyResolutionManagement {
             library("apache-commons-compress", "org.apache.commons", "commons-compress").version("1.23.0")
 
             // S3 client
-            library("s3-kotlin-client", "aws.sdk.kotlin", "s3").version("0.32.0-beta")
+            library("s3-kotlin-client", "aws.sdk.kotlin", "s3").version("0.32.1-beta")
 
             // CLI
             library("picocli", "info.picocli", "picocli").version("4.7.5")
 
             // Logging
+            version("slf4j", "2.0.9")
             library("kotlin-logging-jvm", "io.github.oshai", "kotlin-logging-jvm").version("5.1.0")
-            library("logger-nothing", "org.slf4j", "slf4j-nop").version("2.0.9")
+            library("logger-nothing", "org.slf4j", "slf4j-nop").versionRef("slf4j")
         }
 
         create("testLibs") {

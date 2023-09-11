@@ -11,6 +11,8 @@ application {
 }
 
 dependencies {
+    implementation(libs.kotlinx.coroutines.core)
+
     implementation(project(":format"))
     implementation(libs.kafka.clients)
     implementation(libs.picocli)
@@ -33,4 +35,13 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+}
+
+configurations.all {
+    resolutionStrategy.eachDependency {
+        // ensure we use the same version of slf4j otherwise we get strange runtime errors from the slf4j logger api
+        if (requested.group == "org.slf4j") {
+            useVersion(libs.versions.slf4j.get())
+        }
+    }
 }
