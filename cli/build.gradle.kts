@@ -15,6 +15,7 @@ dependencies {
 
     implementation(project(":format"))
     implementation(libs.kafka.clients)
+    implementation(libs.kafka.storage)
     implementation(libs.picocli)
     implementation(libs.s3.kotlin.client)
     implementation(libs.apache.commons.compress)

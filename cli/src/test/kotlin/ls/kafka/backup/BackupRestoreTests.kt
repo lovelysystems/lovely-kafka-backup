@@ -9,13 +9,15 @@ import io.kotest.core.spec.style.FreeSpec
 import io.kotest.extensions.system.OverrideMode
 import io.kotest.extensions.system.SystemEnvironmentTestListener
 import io.kotest.extensions.testcontainers.ContainerExtension
+import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.shouldBe
 import io.mockk.clearConstructorMockk
 import io.mockk.coEvery
 import io.mockk.mockkConstructor
-import ls.kafka.backup.s3.BackupBucket
-import ls.kafka.backup.s3.S3Config
+import kotlinx.coroutines.flow.toList
+import ls.kafka.backup.s3.*
 import ls.kafka.connect.storage.format.ByteArrayRecordFormat
 import ls.testcontainers.kafka.KafkaKraftContainer
 import ls.testcontainers.minio.MinioContainer
@@ -185,6 +187,13 @@ class BackupRestoreTests : FreeSpec({
         }
     }
 
+    "find records for offset" {
+        writeSampleRecords("get_for_offset", 0, 100)
+
+        val records = backupBucket.getRecordsForOffsets("get_for_offset", 0, (1..100L step 2).toSet()).toList()
+        records.shouldHaveSize(50)
+        records.forAll { it.offset % 2 shouldBe 1 }
+    }
 }) {
     override fun listeners() = listOf(
         SystemEnvironmentTestListener(
