@@ -6,7 +6,7 @@ import java.io.EOFException
 import java.io.InputStream
 
 class RecordStreamReader(input: InputStream) {
-    val dis = DataInputStream(input)
+    private val dis = DataInputStream(input)
 
     fun readAll(): List<DumpRecord> {
         val records = mutableListOf<DumpRecord>()
