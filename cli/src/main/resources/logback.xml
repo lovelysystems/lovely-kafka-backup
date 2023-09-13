@@ -1,17 +1,37 @@
 <configuration>
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <!-- encoders are assigned the type
-             ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
-        <encoder> <!-- TODO optimize pattern for direct cli output to be read by human -->
+    <appender name="LIB_WARNINGS" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>WARN</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <encoder>
             <pattern>%cyan(%d{HH:mm:ss.SSS}) %yellow([%thread]) %highlight(%-5level) %magenta(%logger{36}) - %msg%n
             </pattern>
         </encoder>
     </appender>
 
+    <appender name="CLI_FEEDBACK" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <encoder>
+            <pattern>%highlight(%-5level) %msg%n</pattern>
+        </encoder>
+    </appender>
+
     <logger name="ch.qos.logback" level="WARN"/>
+
+    <logger name="o.a.k.clients" level="WARN"/>
+    <logger name="o.a.kafka" level="WARN"/>
+    <logger name="org.apache.kafka" level="WARN"/>
+
     <logger name="ls" level="INFO"/>
 
-    <root level="WARN">
-        <appender-ref ref="STDOUT"/>
+    <root level="INFO">
+        <appender-ref ref="LIB_WARNINGS"/>
+        <appender-ref ref="CLI_FEEDBACK"/>
     </root>
 </configuration>
