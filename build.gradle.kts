@@ -53,7 +53,7 @@ fun getFormattedProjectName(project: Project): String = ":${project.name}"
  *  Groups together all the known Detekt tasks & adds the non-default ones to the given subproject's "check" task
  */
 task("detektAll", type = Detekt::class) {
-    val includedTasks = setOf("detekt", "detektMain", "detektTest", "detektJvmMain", "detektJvmTest")
+    val includedTasks = setOf("detekt", "detektMain", "detektTest")
     subprojects.forEach { project ->
         project.getAllTasks(true).values.flatten().forEach { task ->
             if (includedTasks.contains(task.name)) {
