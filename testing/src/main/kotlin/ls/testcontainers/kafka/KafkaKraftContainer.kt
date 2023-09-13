@@ -5,6 +5,7 @@ import org.testcontainers.utility.DockerImageName
 import java.net.ServerSocket
 
 class KafkaKraftContainer(
+    volumePath: String? = null,
     private val hostPort: Int = ServerSocket(0).use { it.localPort }  // find a free port
     //Cant rely on Testcontainer mapping because ADVERTISED_LISTENERS
     // need to be configured with an address that is reachable by the client, if relying on Testcontainer
@@ -45,6 +46,10 @@ class KafkaKraftContainer(
 
             "KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE" to "true",
         )
+        volumePath?.let { volume ->
+            withFileSystemBind(volume, "/bitnami/kafka/data/")
+        }
+
         withEnv(envs)
         addFixedExposedPort(hostPort, kafkaInternalPort)
     }

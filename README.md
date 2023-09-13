@@ -39,12 +39,17 @@ The following environment variables can be used to configure the exporter:
 * `METRICS_ENABLED`: Enable or disable the metrics exporter. Default: `true`
 * `METRICS_PORT`: The port the metrics are exposed on. Default: `9876`
 
-# Restore-CLI
+
+# CLI
+
+The CLI generally assumes that topics it writes to either exist or are auto created. It doesn't create any topics.
+
+## Restore
 
 To restore records from a backup run the program. The restore reads backed up records from s3 and appends them to the
 target topics. Offsets of the records are not restored.
 
-## Running
+### Running
 
 Using docker:
 
@@ -64,7 +69,7 @@ or gradle:
 
 The above command restores all records for a given topic to the same topic name.
 
-### All options:
+#### All options:
 
 | Option name      | Short option | Required                                    | Format         | Description                                                                                                  |
 |------------------|--------------|---------------------------------------------|----------------|--------------------------------------------------------------------------------------------------------------|
@@ -79,7 +84,7 @@ The above command restores all records for a given topic to the same topic name.
 | topic            | t            |                                             | String         | The target topic where records are restored to. Otherwise topics get restored into their original topic name |
 | profile          |              |                                             | String         | Profile to user for S3 access. If not set uses `AWS_PROFILE` environment variable or the default profile.    |
 
-## S3 Config
+### S3 Config
 
 S3 can be configured using the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or by setting
 a profile in the parameter `--profile`. Profile takes priority.
@@ -92,3 +97,41 @@ the config file from `~/.aws` would need to be mounted into the container.
 
 Additional configs for kafka can be set via environment variables prefixed with `KAFKA_`. If an argument is passed the
 argument takes priority.
+
+## Repair
+
+To repair corrupted records from a backup use the subcommand `repair`:
+
+Using docker:
+
+```bash                     
+docker run repair --bucket <s3-backup-bucket> --data-directory <data-directory>
+```
+
+or gradle:
+
+```bash
+
+./gradlew :cli:run --args="repair --bucket <s3-backup-bucket> --data-directory <data-directory>"
+
+```
+
+### All options:
+| Option name       | Short | Required  | Description                                                       |
+|-------------------|-------|-----------|-------------------------------------------------------------------|
+| bucket            | b     | always    | Backup bucket to repair from                                      |
+| data-directory    |       | always    | Data directory to which contains the kafka data                   |
+| filter            | f     |           | glob pattern to filter log directories to repair. Defaults to all |
+| skipBroken        | s     |           | Flag. If set records which aren't in the backup are skipped       |
+| repair            | r     |           | Flag. If set the files are repaired otherwise just listed         |
+| s3Endpoint        |       |           | Url to S3. If not given defaults to AWS-S3                        |
+| profile           |       |           | The profile to use for s3 access                                  |
+
+
+### S3 Config
+
+S3 can be configured using the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or by setting 
+a profile in the parameter `--profile`. Profile takes priority.
+
+NOTE: configuration via profile is mostly useful for development and running the cli via `gradle :cli:run`. To use the it in docker
+the config file from `~/.aws` would need to be mounted into the container.

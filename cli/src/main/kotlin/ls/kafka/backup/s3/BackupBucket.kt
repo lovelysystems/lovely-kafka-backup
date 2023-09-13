@@ -6,9 +6,10 @@ import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.headBucket
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProviderChain
 import aws.smithy.kotlin.runtime.net.Url
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.takeWhile
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
+import ls.kafka.model.DumpRecord
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.ByteArraySerializer
@@ -36,7 +37,7 @@ class BackupBucket(private val bucket: String, s3Config: S3Config, private val k
     /**
      * Validates that the bucket exists and the user has access to it.
      */
-    private suspend fun validateBucket() {
+    suspend fun validateBucket() {
         s3.headBucket {
             bucket = this@BackupBucket.bucket
         }
@@ -87,4 +88,21 @@ class BackupBucket(private val bucket: String, s3Config: S3Config, private val k
             }
         }
     }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun getRecordsForOffsets(
+        topic: String,
+        partition: Int?,
+        offsets: Set<Long>,
+    ): Flow<DumpRecord> =
+        s3.backupFiles(bucket, null, Regex(".*")).filter { backupFile -> backupFile.topic == topic }
+            .flatMapConcat { backupFile ->
+                val allRecords = backupFile.records
+                val recordsInPartition = if (partition != null) {
+                    allRecords.filter { record -> record.partition == partition }
+                } else {
+                    allRecords
+                }
+                recordsInPartition.filter { record -> record.offset in offsets }.asFlow()
+            }
 }

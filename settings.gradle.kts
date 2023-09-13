@@ -34,6 +34,7 @@ dependencyResolutionManagement {
             version("kafka", "3.5.1")
             library("kafka-connect-runtime", "org.apache.kafka", "connect-runtime").versionRef("kafka")
             library("kafka-clients", "org.apache.kafka", "kafka-clients").versionRef("kafka")
+            library("kafka-storage", "org.apache.kafka", "kafka-storage").versionRef("kafka")
 
             // Confluent
             // NOTE: Last version that supports gzip compression for custom formatters
