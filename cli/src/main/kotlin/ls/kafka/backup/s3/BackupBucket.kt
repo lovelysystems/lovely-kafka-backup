@@ -76,7 +76,8 @@ class BackupBucket(private val bucket: String, s3Config: S3Config, private val k
             var count = 0
             backupFiles.withIndex().collect { (index, file) ->
                 count = index
-                if (index > 0 && index % RECORDS_PER_MESSAGE == 0) {
+                if (count > 0 && count % FLUSH_SIZE == 0) {
+                    producer.flush()
                     logger.info { "Restored $count records" }
                 }
                 file.records.forEach { record ->
@@ -95,6 +96,7 @@ class BackupBucket(private val bucket: String, s3Config: S3Config, private val k
                     )
                 }
             }
+            producer.flush()
             logger.info { buildString {
                 append("Restored a total of $count records ")
                 targetTopic?.let {
@@ -122,6 +124,6 @@ class BackupBucket(private val bucket: String, s3Config: S3Config, private val k
             }
 
     companion object {
-        const val  RECORDS_PER_MESSAGE = 100
+        const val  FLUSH_SIZE = 100
     }
 }
