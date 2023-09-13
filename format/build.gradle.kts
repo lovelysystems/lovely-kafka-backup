@@ -7,6 +7,8 @@ plugins {
 group = "com.lovelysystems"
 
 dependencies {
+    implementation(libs.kotlinx.coroutines.core)
+
     // Test
     testImplementation(testLibs.kotest.runner.junit5)
 }

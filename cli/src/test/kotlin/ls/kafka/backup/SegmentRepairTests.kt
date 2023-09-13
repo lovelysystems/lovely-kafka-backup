@@ -6,6 +6,7 @@ import io.confluent.connect.s3.S3SinkConnectorConfig
 import io.confluent.connect.s3.storage.S3Storage
 import io.kotest.core.extensions.install
 import io.kotest.core.spec.style.FreeSpec
+import io.kotest.engine.spec.tempdir
 import io.kotest.extensions.system.OverrideMode
 import io.kotest.extensions.system.SystemEnvironmentTestListener
 import io.kotest.extensions.testcontainers.ContainerExtension
@@ -15,10 +16,23 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
-import io.mockk.*
+import io.mockk.clearConstructorMockk
+import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.mockkConstructor
+import io.mockk.mockkStatic
+import io.mockk.spyk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
-import ls.kafka.backup.s3.*
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
+import ls.kafka.backup.s3.BackupBucket
+import ls.kafka.backup.s3.DataDirectory
+import ls.kafka.backup.s3.S3Config
+import ls.kafka.backup.s3.missingOffsets
+import ls.kafka.backup.s3.toRecords
 import ls.kafka.connect.storage.format.ByteArrayRecordFormat
 import ls.testcontainers.kafka.KafkaKraftContainer
 import ls.testcontainers.minio.MinioContainer
@@ -39,7 +53,10 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.*
-import kotlin.io.path.*
+import kotlin.io.path.div
+import kotlin.io.path.fileSize
+import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.pathString
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
@@ -48,8 +65,17 @@ class SegmentRepairTests : FreeSpec({
     val bucket = "backup-bucket"
     val credentials = MinioCredentials("minioadmin", "minioadmin")
 
-    val kafkaData = createTempDirectory()
-    val kafka = install(ContainerExtension(KafkaKraftContainer(kafkaData.pathString)))
+    val kafkaData = tempdir().toPath()
+    val kafka = install(
+        ContainerExtension(KafkaKraftContainer(kafkaData.pathString)
+            .withCreateContainerCmdModifier { cmd ->
+                // workaround for CI environment where the default user is not root
+                if (System.getenv("CI").isNullOrEmpty()) {
+                    cmd.withUser("root")
+                }
+            }
+        )
+    )
 
     mockkConstructor(ProfileCredentialsProvider::class)
     coEvery {
@@ -167,7 +193,7 @@ class SegmentRepairTests : FreeSpec({
                 (1..1000L step 10).forEach { emit(it) }
             }
             val bb = BackupBucket(bucket, S3Config(minio.getHostAddress()), Properties())
-            val temp = createTempDirectory()
+            val temp = tempdir().toPath()
             val out = temp / "${sm.startOffset}.log"
             spiedSegment.repairFromBackup(out.toFile(), bb, failOnMissing = false) shouldBe true
             out.fileSize() shouldBeGreaterThan 1024L * 5L
@@ -204,7 +230,7 @@ class SegmentRepairTests : FreeSpec({
             } returnsMany listOf(brokenOffsets, brokenOffsets, LongRange.EMPTY)
 
             val bb = BackupBucket(bucket, S3Config(minio.getHostAddress()), Properties())
-            val temp = createTempDirectory()
+            val temp = tempdir().toPath()
             val out = temp / "${sm.startOffset}.log"
             sm.repairFromBackup(out.toFile(), bb, failOnMissing = false) shouldBe true
 

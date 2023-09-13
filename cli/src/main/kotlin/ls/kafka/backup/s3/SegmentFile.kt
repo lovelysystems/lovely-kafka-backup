@@ -281,8 +281,8 @@ class SegmentFile(
         }
         val toRestore = backupBucket.getRecordsForOffsets(
             topic,
-            partition,
-            corruptedOffsets,
+            partition = partition,
+            offsets = corruptedOffsets,
         ).toList().associateBy { it.offset }
 
         if (failOnMissing && !toRestore.keys.containsAll(corruptedOffsets)) {

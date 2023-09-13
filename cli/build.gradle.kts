@@ -1,7 +1,6 @@
 plugins {
     kotlin("jvm")
     application
-    `java-test-fixtures`
     id("com.github.johnrengelman.shadow")
     id("io.gitlab.arturbosch.detekt")
 }
@@ -33,6 +32,7 @@ dependencies {
 
     testImplementation(libs.confluent.connect.s3)
     testImplementation(libs.kafka.connect.runtime)
+    testImplementation(libs.slf4j.api)  // solves logging issues with Kotest
 }
 
 tasks.withType<Test>().configureEach {
