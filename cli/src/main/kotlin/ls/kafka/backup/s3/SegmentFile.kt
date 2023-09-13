@@ -123,7 +123,6 @@ class SegmentFile(
         }
     }
 
-    //TODO note that this is pretty much the only significant change to previous implementation
     fun batchPairs(): Flow<Pair<FileLogInputStream.FileChannelRecordBatch, FileLogInputStream.FileChannelRecordBatch?>> =
         flow {
             val fileRecords = getFileRecords()
