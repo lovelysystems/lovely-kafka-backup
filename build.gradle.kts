@@ -61,7 +61,7 @@ task("detektAll", type = Detekt::class) {
 
                 /**
                  * Normal :detekt tasks doesn't find all the issues but :detektMain and :detektTest do.
-                 * Adding dependency on those task so :detekt finds the correct issues.
+                 * Adding dependency on those task so :detekt finds the correct issues and can be run for just one subproject.
                  */
                 task.dependsOn += "$projectName:detektMain"
                 task.dependsOn += "$projectName:detektTest"
