@@ -35,13 +35,21 @@ subprojects {
     // ensure that java 11 is used in all kotlin projects
     extensions.findByType<KotlinJvmProjectExtension>()?.apply {
         jvmToolchain {
-            (this as JavaToolchainSpec).languageVersion.set(JavaLanguageVersion.of(11))
+            // use the GraalVM JDK 11 from foojay-toolchain plugin if available
+            vendor.set(JvmVendorSpec.GRAAL_VM)
+            version = "11"
+            languageVersion.set(JavaLanguageVersion.of(11))
         }
     }
 }
 
 kotlin {
-    jvmToolchain(11)
+    jvmToolchain {
+        // use the GraalVM JDK 11 from foojay-toolchain plugin if available
+        vendor.set(JvmVendorSpec.GRAAL_VM)
+        version = "11"
+        languageVersion.set(JavaLanguageVersion.of(11))
+    }
 }
 
 tasks.withType<Test> {

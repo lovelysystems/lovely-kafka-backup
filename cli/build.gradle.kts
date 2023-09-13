@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm")
     application
+    `java-library`
     `java-test-fixtures`
     id("io.gitlab.arturbosch.detekt")
     id("org.graalvm.buildtools.native")
@@ -9,29 +10,6 @@ plugins {
 
 application {
     mainClass.set("ls.kafka.backup.cli.ApplicationKt")
-}
-
-graalvmNative {
-
-    if (System.getenv("USE_NATIVE_IMAGE_JAVA_PLATFORM_MODULE_SYSTEM") != "false") {
-        error("set USE_NATIVE_IMAGE_JAVA_PLATFORM_MODULE_SYSTEM to false")
-        // this workaround is intended for removal by graal, see https://www.graalvm.org/release-notes/22_2/
-    }
-
-    binaries {
-        named("main") {
-            javaLauncher.set(javaToolchains.launcherFor {
-                languageVersion.set(JavaLanguageVersion.of(11))
-                vendor.set(JvmVendorSpec.matching("GraalVm"))
-            })
-        }
-    }
-}
-
-kapt {
-    arguments {
-        arg("project", "${project.group}/${project.name}")
-    }
 }
 
 dependencies {
@@ -58,6 +36,26 @@ dependencies {
 
     testImplementation(libs.confluent.connect.s3)
     testImplementation(libs.kafka.connect.runtime)
+}
+
+kapt {
+    arguments {
+        arg("project", "${project.group}/${project.name}")
+    }
+}
+
+graalvmNative {
+    toolchainDetection = true
+
+    binaries {
+        named("main") {
+            javaLauncher.set(javaToolchains.launcherFor {
+                languageVersion.set(JavaLanguageVersion.of(11))
+                vendor.set(JvmVendorSpec.GRAAL_VM)
+                version = "11"
+            })
+        }
+    }
 }
 
 tasks.withType<Test>().configureEach {

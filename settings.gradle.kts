@@ -5,14 +5,24 @@ include("confluent-connect", "format", "cli", "testing")
 
 pluginManagement {
     val kotlinVersion: String by settings
+
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+    }
+
     plugins {
         kotlin("jvm") version kotlinVersion
         id("com.lovelysystems.gradle") version "1.12.0"
         id("com.github.johnrengelman.shadow") version "8.1.1"
         id("io.gitlab.arturbosch.detekt") version "1.23.1"
-        id("org.graalvm.buildtools.native") version "0.9.25"
-        kotlin("kapt") version "1.9.10"
+        id("org.graalvm.buildtools.native") version "0.9.26"
+        kotlin("kapt") version kotlinVersion
     }
+}
+
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.7.0"
 }
 
 dependencyResolutionManagement {
@@ -50,8 +60,9 @@ dependencyResolutionManagement {
             library("s3-kotlin-client", "aws.sdk.kotlin", "s3").version("0.32.1-beta")
 
             // CLI
-            library("picocli", "info.picocli", "picocli").version("4.7.5")
-            library("picocli-codegen", "info.picocli", "picocli-codegen").version("4.7.5")
+            version("picocli", "4.7.5")
+            library("picocli", "info.picocli", "picocli").versionRef("picocli")
+            library("picocli-codegen", "info.picocli", "picocli-codegen").versionRef("picocli")
 
             // Logging
             version("slf4j", "2.0.9")
