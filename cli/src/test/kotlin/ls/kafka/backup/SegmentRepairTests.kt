@@ -197,22 +197,16 @@ class SegmentRepairTests : FreeSpec({
 
             val dataDir = DataDirectory(kafkaData)
             val sm = dataDir.logDirectories("$topic*").first().segmentFiles().toList().last()
-            val spiedSegment = spyk(sm)
-            every {
-                spiedSegment.getCorruptedOffsets()
-            } returns flow {
-                brokenOffsets.forEach { emit(it) }
-            }
 
             mockkStatic(FileLogInputStream.FileChannelRecordBatch::missingOffsets)
             every {
                 any<FileLogInputStream.FileChannelRecordBatch>().missingOffsets(matchNullable { it != null })
-            } returns brokenOffsets
+            } returnsMany listOf(brokenOffsets, brokenOffsets, LongRange.EMPTY)
 
             val bb = BackupBucket(bucket, S3Config(minio.getHostAddress()), Properties())
             val temp = createTempDirectory()
             val out = temp / "${sm.startOffset}.log"
-            spiedSegment.repairFromBackup(out.toFile(), bb, failOnMissing = false) shouldBe true
+            sm.repairFromBackup(out.toFile(), bb, failOnMissing = false) shouldBe true
 
             val records = FileRecords.open(out.toFile()).records().toList()
             val values = records.map { StandardCharsets.UTF_8.decode(it.value()).toString() }

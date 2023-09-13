@@ -90,22 +90,19 @@ class BackupBucket(private val bucket: String, s3Config: S3Config, private val k
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    suspend fun getRecordsForOffsets(
+    fun getRecordsForOffsets(
         topic: String,
         partition: Int?,
         offsets: Set<Long>,
     ): Flow<DumpRecord> =
         s3.backupFiles(bucket, null, Regex(".*")).filter { backupFile -> backupFile.topic == topic }
             .flatMapConcat { backupFile ->
-                flow {
-                    val allRecords = backupFile.records
-                    val recordsInPartition = if (partition != null) {
-                        allRecords.filter { record -> record.partition == partition }
-                    } else {
-                        allRecords
-                    }
-                    recordsInPartition.filter { record -> record.offset in offsets }.forEach { record -> emit(record) }
+                val allRecords = backupFile.records
+                val recordsInPartition = if (partition != null) {
+                    allRecords.filter { record -> record.partition == partition }
+                } else {
+                    allRecords
                 }
+                recordsInPartition.filter { record -> record.offset in offsets }.asFlow()
             }
-
 }

@@ -1,5 +1,6 @@
 package ls.kafka.backup.s3
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import ls.kafka.model.DumpRecord
 import org.apache.kafka.common.errors.CorruptRecordException
@@ -63,6 +64,7 @@ fun Path.asSegmentFile(): SegmentFile {
     }
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class SegmentFile(
     val logFile: Path,
     val partition: Int,
@@ -98,13 +100,14 @@ class SegmentFile(
         return list
     }
 
-    fun getCorruptedOffsets() = flow {
-        batchPairs().map { (currentBatch, lastBatch) ->
-            lastBatch?.let {
-                currentBatch.missingOffsets(it).forEach { offset -> emit(offset) }
+    fun getCorruptedOffsets() =
+        batchPairs().flatMapConcat { (currentBatch, lastBatch) ->
+            flow {
+                lastBatch?.let {
+                    currentBatch.missingOffsets(it).forEach { offset -> emit(offset) }
+                }
             }
         }
-    }
 
     fun getFileRecords(): FileRecords {
         return FileRecords.open(logFile.toFile(), false, true, 0, false)
