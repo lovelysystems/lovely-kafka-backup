@@ -51,7 +51,7 @@ dependencyResolutionManagement {
             library("picocli", "info.picocli", "picocli").version("4.7.5")
 
             // Logging
-            library("kotlin-logging-jvm", "io.github.oshai", "kotlin-logging-jvm").version("5.1.0") //TODO remove when also replaced in confluent
+            library("kotlin-logging-jvm", "io.github.oshai", "kotlin-logging-jvm").version("5.1.0")
             library("logback-classic", "ch.qos.logback", "logback-classic").version("1.4.11")
         }
 
