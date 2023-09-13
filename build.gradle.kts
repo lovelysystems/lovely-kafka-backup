@@ -58,12 +58,10 @@ task("detektAll", type = Detekt::class) {
             if (task.name == "detekt") {
                 val projectName = getFormattedProjectName(task.project)
                 dependsOn("$projectName:${task.name}")
+
                 /**
-                 * For some reason the :detekt task wouldn't find some issues that are found by the more specific tasks :detektMain and
-                 * :detektTest. Specifically issues for rules that differ from the default config. Manually setting the config
-                 * file in the subprojects task doesn't solve it and the correct file is recognised by the subproject.
-                 *
-                 * As a workaround add dependency to the main task so that detekt can be run for just a subproject instead of using :detektAll.
+                 * Normal :detekt tasks doesn't find all the issues but :detektMain and :detektTest do.
+                 * Adding dependency on those task so :detekt finds the correct issues.
                  */
                 task.dependsOn += "$projectName:detektMain"
                 task.dependsOn += "$projectName:detektTest"
