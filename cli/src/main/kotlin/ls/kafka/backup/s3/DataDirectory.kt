@@ -1,5 +1,6 @@
 package ls.kafka.backup.s3
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.*
 import java.nio.file.Path
 import kotlin.io.path.exists
@@ -8,6 +9,8 @@ import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.moveTo
 
 class DataDirectory(private val path: Path) {
+
+    private val logger = KotlinLogging.logger { }
 
     init {
         if (!path.isDirectory()) error("not a directory: $path")
@@ -20,7 +23,7 @@ class DataDirectory(private val path: Path) {
 
     fun brokenSegments(glob: String) = flow {
         for (ld in logDirectories(glob)) {
-            println("checking for broken segments in : ${ld.path.fileName}")
+            logger.info { "checking for broken segments in : ${ld.path.fileName}" }
             emitAll(ld.brokenSegments())
         }
     }
@@ -35,7 +38,7 @@ class DataDirectory(private val path: Path) {
             val repairedFile = sf.segmentPath("repaired")
             if (repairedFile.exists()) error("repaired file exists $repairedFile")
 
-            println("repairing log file to ${repairedFile.fileName} ...")
+            logger.info { "repairing log file to ${repairedFile.fileName} ..." }
             sf.repairFromBackup(repairedFile.toFile(), bucket, failOnMissing = !skipBroken)
 
             for (ext in listOf("log", "index", "timeindex")) {
@@ -45,7 +48,7 @@ class DataDirectory(private val path: Path) {
                 src.moveTo(trg)
             }
 
-            println("use repaired file as log file ${sf.logFile.fileName}")
+            logger.info { "use repaired file as log file ${sf.logFile.fileName}" }
             repairedFile.moveTo(sf.logFile)
             sf
         }

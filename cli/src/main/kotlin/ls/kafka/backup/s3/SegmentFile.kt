@@ -1,5 +1,6 @@
 package ls.kafka.backup.s3
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import ls.kafka.model.DumpRecord
@@ -70,6 +71,8 @@ class SegmentFile(
     val partition: Int,
     val topic: String
 ) {
+
+    private val logger = KotlinLogging.logger { }
 
     private val indexFile = segmentPath("index")
     val startOffset = logFile.nameWithoutExtension.toLong()
@@ -174,14 +177,15 @@ class SegmentFile(
         val records = restored.mapNotNull { it.second }
 
         if (records.isEmpty()) {
-            println("WARN: none of the offsets ${restored.map { it.first }} can be restored emitting empty batch")
+            logger.warn { "none of the offsets ${restored.map { it.first }} can be restored emitting empty batch" }
             return MemoryRecords.EMPTY
         } else if (records.size < restored.size) {
 
-            println("WARN: not all offsets can be restored: " +
-                    "missing=${restored.filter { it.second == null }.map { it.first }} " +
-                    "found=  ${restored.filter { it.second != null }.map { it.first }}"
-            )
+            logger.warn {
+                "not all offsets can be restored: " +
+                        "missing=${restored.filter { it.second == null }.map { it.first }} " +
+                        "found=  ${restored.filter { it.second != null }.map { it.first }}"
+            }
         }
 
         val sizeEstimate =
@@ -260,7 +264,7 @@ class SegmentFile(
             error("repair failed, found broken offsets: ${it.joinToString(",")} in $outFile")
         }
         smOut.findOffsetGaps().collect { (record, last) ->
-            println("gap found in repaired file: last=$last record=$record")
+            logger.warn { "gap found in repaired file: last=$last record=$record" }
         }
     }
 

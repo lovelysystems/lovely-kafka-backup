@@ -51,9 +51,8 @@ dependencyResolutionManagement {
             library("picocli", "info.picocli", "picocli").version("4.7.5")
 
             // Logging
-            version("slf4j", "2.0.9")
-            library("kotlin-logging-jvm", "io.github.oshai", "kotlin-logging-jvm").version("5.1.0")
-            library("logger-nothing", "org.slf4j", "slf4j-nop").versionRef("slf4j")
+            library("kotlin-logging-jvm", "io.github.oshai", "kotlin-logging-jvm").version("5.1.0") //TODO remove when also replaced in confluent
+            library("logback-classic", "ch.qos.logback", "logback-classic").version("1.4.11")
         }
 
         create("testLibs") {

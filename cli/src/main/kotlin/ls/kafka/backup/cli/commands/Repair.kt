@@ -1,5 +1,6 @@
 package ls.kafka.backup.cli.commands
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.runBlocking
 import ls.kafka.backup.s3.BackupBucket
 import ls.kafka.backup.s3.DataDirectory
@@ -11,7 +12,13 @@ import kotlin.io.path.Path
 @Command(name = "repair")
 class Repair : Runnable {
 
-    @Option(names = ["-b", "--bucket"], description = ["The S3 bucket to source backups used for repair"], required = true)
+    private val logger = KotlinLogging.logger { }
+
+    @Option(
+        names = ["-b", "--bucket"],
+        description = ["The S3 bucket to source backups used for repair"],
+        required = true
+    )
     lateinit var bucket: String
 
     @Option(
@@ -46,11 +53,11 @@ class Repair : Runnable {
             // ensure the bucket works before we do anything
             bb.validateBucket()
             dataDir.repairBrokenSegments(bb, filter, skipBroken = skipBroken).collect { sf ->
-                println("repaired ${sf.logFile}")
+                logger.info { "repaired ${sf.logFile}" }
             }
         } else {
             dataDir.brokenSegments(filter)
-                .collect { sf -> println("Broken: ${sf.logFile}") }
+                .collect { sf -> logger.info { "Broken: ${sf.logFile}" } }
         }
     }
 }

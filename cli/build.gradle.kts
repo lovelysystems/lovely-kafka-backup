@@ -20,7 +20,9 @@ dependencies {
     implementation(libs.s3.kotlin.client)
     implementation(libs.apache.commons.compress)
 
-    runtimeOnly(libs.logger.nothing)
+    //implementation(libs.microutils.logging)
+    implementation(libs.kotlin.logging.jvm)
+    runtimeOnly(libs.logback.classic)
 
     testImplementation(project(":testing"))
     testImplementation(project(":confluent-connect"))
@@ -36,13 +38,4 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
-}
-
-configurations.all {
-    resolutionStrategy.eachDependency {
-        // ensure we use the same version of slf4j otherwise we get strange runtime errors from the slf4j logger api
-        if (requested.group == "org.slf4j") {
-            useVersion(libs.versions.slf4j.get())
-        }
-    }
 }
