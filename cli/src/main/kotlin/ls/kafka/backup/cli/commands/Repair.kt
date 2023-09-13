@@ -11,7 +11,7 @@ import kotlin.io.path.Path
 @Command(name = "repair")
 class Repair : Runnable {
 
-    @Option(names = ["-b", "--bucket"], description = ["Bucket to repair from"], required = true)
+    @Option(names = ["-b", "--bucket"], description = ["The S3 bucket to source backups used for repair"], required = true)
     lateinit var bucket: String
 
     @Option(
