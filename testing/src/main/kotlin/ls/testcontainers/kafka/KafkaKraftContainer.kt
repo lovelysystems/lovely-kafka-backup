@@ -10,7 +10,7 @@ class KafkaKraftContainer(
     //Cant rely on Testcontainer mapping because ADVERTISED_LISTENERS
     // need to be configured with an address that is reachable by the client, if relying on Testcontainer
     // mapping we won't know the outward port until the container has started
-) : GenericContainer<KafkaKraftContainer>(DockerImageName.parse("bitnami/kafka:3.4.0")) {
+) : GenericContainer<KafkaKraftContainer>(DockerImageName.parse("bitnami/kafka:3.4.1")) {
 
     private val kafkaInternalPort = 9092
 
@@ -19,6 +19,7 @@ class KafkaKraftContainer(
 
     init {
         val envs = mapOf(
+            "BITNAMI_DEBUG" to "1",
             "KAFKA_BROKER_ID" to "1",
             "KAFKA_CFG_NODE_ID" to "1",
             "KAFKA_ENABLE_KRAFT" to "yes",

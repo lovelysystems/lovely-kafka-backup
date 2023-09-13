@@ -1,5 +1,6 @@
 package ls.kafka.io
 
+import kotlinx.coroutines.flow.flow
 import ls.kafka.model.DumpRecord
 import java.io.DataInputStream
 import java.io.EOFException
@@ -8,17 +9,11 @@ import java.io.InputStream
 class RecordStreamReader(input: InputStream) {
     private val dis = DataInputStream(input)
 
-    fun readAll(): List<DumpRecord> {
-        val records = mutableListOf<DumpRecord>()
+    fun readAll() = flow {
         while (true) {
-            val curr = read()
-            if (curr == null) {
-                break
-            } else {
-                records.add(curr)
-            }
+            val curr = read() ?: break
+            emit(curr)
         }
-        return records
     }
 
     /**

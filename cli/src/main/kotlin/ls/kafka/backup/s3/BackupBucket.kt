@@ -7,10 +7,9 @@ import aws.sdk.kotlin.services.s3.headBucket
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProviderChain
 import aws.smithy.kotlin.runtime.net.Url
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
-import ls.kafka.model.DumpRecord
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.ByteArraySerializer
@@ -21,7 +20,7 @@ import java.util.*
  */
 class BackupBucket(private val bucket: String, s3Config: S3Config, private val kafkaConfig: Properties) {
 
-    private val logger = KotlinLogging.logger {  }
+    private val logger = KotlinLogging.logger { }
 
     private val s3 = runBlocking {
         S3Client.fromEnvironment {
@@ -55,75 +54,66 @@ class BackupBucket(private val bucket: String, s3Config: S3Config, private val k
         toOffset: Long? = null,
     ) {
         validateBucket()
-        logger.info { "Restoring from bucket $bucket with prefix: $prefix, keyPattern: ${keyPattern.pattern}, partition: $partition" }
-        var backupFiles = s3.backupFiles(bucket, prefix, keyPattern)
-        // ensure only files that match the offset range and partition are used for restore
-        if (toOffset != null) {
-            backupFiles = backupFiles.takeWhile { it.startOffset <= toOffset }
-        }
-        if (fromOffset != 0L) {
-            backupFiles = backupFiles.filter { it.startOffset <= fromOffset }
-        }
-        if (partition != null) {
-            backupFiles = backupFiles.filter { it.partition == partition }
-        }
+        logger.info { "Restoring records from path s3://$bucket/$prefix" }
+        val backupRecords = s3.backupRecords(
+            bucket,
+            prefix,
+            keyPattern,
+            partition = partition,
+            fromOffset = fromOffset,
+            toOffset = toOffset
+        )
 
         KafkaProducer(
             kafkaConfig,
             ByteArraySerializer(),
             ByteArraySerializer()
         ).use { producer ->
-            var count = 0
-            backupFiles.withIndex().collect { (index, file) ->
-                count = index
-                if (count > 0 && count % FLUSH_SIZE == 0) {
+            var count = 0L
+            backupRecords.collect { (key, record) ->
+                if (count > 0 && count % FLUSH_SIZE == 0L) {
                     producer.flush()
                     logger.info { "Restored $count records" }
                 }
-                file.records.forEach { record ->
-                    // skip records that do not match the offset range
-                    if (fromOffset != 0L && record.offset < fromOffset) return@forEach
-                    if (toOffset != null && record.offset >= toOffset) return@forEach
 
-                    producer.send(
-                        ProducerRecord(
-                            targetTopic ?: file.topic,
-                            null,
-                            record.ts,
-                            record.key,
-                            record.value
-                        )
+                // skip records that do not match the offset range
+                if (fromOffset != 0L && record.offset < fromOffset) return@collect
+                if (toOffset != null && record.offset >= toOffset) return@collect
+
+                producer.send(
+                    ProducerRecord(
+                        targetTopic ?: BackupFile(key).topic,
+                        null,
+                        record.ts,
+                        record.key,
+                        record.value
                     )
-                }
+                )
+                count++
             }
             producer.flush()
-            logger.info { buildString {
-                append("Restored a total of $count records ")
-                targetTopic?.let {
-                    append("to topic $it")
+
+            logger.info {
+                buildString {
+                    append("Restored a total of $count records ")
+                    targetTopic?.let {
+                        append("to topic $it")
+                    }
                 }
-            } }
+            }
         }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     fun getRecordsForOffsets(
         topic: String,
+        prefix: String = "",
+        keyPattern: Regex = Regex(".*"),
         partition: Int?,
         offsets: Set<Long>,
-    ): Flow<DumpRecord> =
-        s3.backupFiles(bucket, null, Regex(".*")).filter { backupFile -> backupFile.topic == topic }
-            .flatMapConcat { backupFile ->
-                val allRecords = backupFile.records
-                val recordsInPartition = if (partition != null) {
-                    allRecords.filter { record -> record.partition == partition }
-                } else {
-                    allRecords
-                }
-                recordsInPartition.filter { record -> record.offset in offsets }.asFlow()
-            }
+    ) = s3.backupRecords(bucket, prefix, keyPattern, topic, partition)
+        .filter { it.second.offset in offsets }.map { it.second }
 
     companion object {
-        const val  FLUSH_SIZE = 100
+        const val FLUSH_SIZE = 100
     }
 }

@@ -28,7 +28,7 @@ dependencyResolutionManagement {
                 "kotlinx-coroutines-core",
                 "org.jetbrains.kotlinx",
                 "kotlinx-coroutines-core"
-            ).version("kotlinx-coroutines")
+            ).versionRef("kotlinx-coroutines")
 
             // Apache Kafka
             version("kafka", "3.5.1")
@@ -53,6 +53,7 @@ dependencyResolutionManagement {
             // Logging
             library("kotlin-logging-jvm", "io.github.oshai", "kotlin-logging-jvm").version("5.1.0")
             library("logback-classic", "ch.qos.logback", "logback-classic").version("1.4.11")
+            library("slf4j-api", "org.slf4j", "slf4j-api").version("2.0.9")
         }
 
         create("testLibs") {
