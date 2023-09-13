@@ -146,8 +146,8 @@ class SegmentFile(
                 try {
                     while (iterator.hasNext()) {
                         currentBatch = iterator.next()
-                        lastBatch?.let {
-                            assert(currentBatch.baseOffset() != it.baseOffset()) {
+                        lastBatch?.let { last ->
+                            assert(currentBatch.baseOffset() != last.baseOffset()) {
                                 "tried to yield the same offset twice ${currentBatch.baseOffset()}"
                             }
                         }

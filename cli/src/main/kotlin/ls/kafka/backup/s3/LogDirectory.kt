@@ -16,9 +16,9 @@ class LogDirectory(val path: Path) {
 
     init {
         if (!path.isDirectory()) error("$path is not a directory")
-        path.name.let {
-            partition = it.substringAfterLast("-").toInt()
-            topic = it.substringBeforeLast("-")
+        path.name.let { name ->
+            partition = name.substringAfterLast("-").toInt()
+            topic = name.substringBeforeLast("-")
         }
     }
 

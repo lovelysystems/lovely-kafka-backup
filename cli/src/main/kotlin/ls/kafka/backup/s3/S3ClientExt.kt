@@ -33,9 +33,9 @@ fun S3Client.backupFiles(
                 val key = listItem.key ?: error("Got object with empty key")
                 getObject(GetObjectRequest {
                     this.key = key; this.bucket = bucket
-                }) {
+                }) { response ->
                     val compressed = key.endsWith(".gz")
-                    val inputStream = it.body?.toInputStream() ?: error("Got object with empty body")
+                    val inputStream = response.body?.toInputStream() ?: error("Got object with empty body")
                     val stream = if (compressed) {
                         GzipCompressorInputStream(inputStream)
                     } else {
