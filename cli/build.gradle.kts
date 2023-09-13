@@ -20,7 +20,6 @@ dependencies {
     implementation(libs.s3.kotlin.client)
     implementation(libs.apache.commons.compress)
 
-    //implementation(libs.microutils.logging)
     implementation(libs.kotlin.logging.jvm)
     runtimeOnly(libs.logback.classic)
 
