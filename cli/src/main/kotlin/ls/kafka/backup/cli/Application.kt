@@ -1,8 +1,8 @@
 package ls.kafka.backup.cli
 
-import ls.kafka.backup.cli.commands.BackupCli
+import ls.kafka.backup.cli.commands.ApplicationCommand
 import picocli.CommandLine
 
 fun main(args: Array<String>) {
-    CommandLine(BackupCli()).execute(*args)
+    CommandLine(ApplicationCommand()).execute(*args)
 }

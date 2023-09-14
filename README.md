@@ -54,7 +54,7 @@ target topics. Offsets of the records are not restored.
 Using docker:
 
 ```bash                     
-docker run --network host lovelysystems/lovely-kafka-backup:dev restore --bucket <s3-backup-bucket> --prefix <prefix>
+docker run --network host lovelysystems/lovely-kafka-backup:dev cli restore --bucket <s3-backup-bucket> --prefix <prefix>
 ```
 
 NOTE: network host is required if kafka is also running locally in a container
@@ -63,7 +63,7 @@ or gradle:
 
 ```bash
 
-./gradlew :cli:run --args="restore --bucket <s3-backup-bucket> --prefix <prefix>"
+./gradlew :cli:run --args="cli restore --bucket <s3-backup-bucket> --prefix <prefix>"
 
 ```
 
