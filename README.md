@@ -44,30 +44,46 @@ The following environment variables can be used to configure the exporter:
 
 The CLI generally assumes that topics it writes to either exist or are auto created. It doesn't create any topics.
 
-## Restore
+## Running
+
+The cli can be run using gradle:
+
+```bash
+./gradlew :cli:run --args="cli <subcommand> <args>..."
+```
+
+or on container startup with docker:
+
+```bash                     
+docker run --network host lovelysystems/lovely-kafka-backup:dev cli <subcommand> <args>...
+```
+NOTE: network host is required if kafka is also running locally in a container
+
+or kubectl:
+
+```bash
+kubectl run my-cli-container --rm -i --image lovelysystems/lovely-kafka-backup:dev "cli <subcommand> <args>..."
+```
+
+or from within a running container:
+```bash
+cli <subcommand>
+```
+
+## Subcommands
+
+### Restore
 
 To restore records from a backup run the program. The restore reads backed up records from s3 and appends them to the
 target topics. Offsets of the records are not restored.
 
-### Running
-
-Using docker:
-
-```bash                     
-docker run --network host lovelysystems/lovely-kafka-backup:dev cli restore --bucket <s3-backup-bucket> --prefix <prefix>
-```
-
-NOTE: network host is required if kafka is also running locally in a container
-
-or gradle:
+#### Demo call
 
 ```bash
-
-./gradlew :cli:run --args="cli restore --bucket <s3-backup-bucket> --prefix <prefix>"
-
+cli restore --bucket user-devices --s3Endpoint http://localhost:9000 --bootstrapServers localhost:9092
 ```
 
-The above command restores all records for a given topic to the same topic name.
+This command restores all the backed up records in the bucket `user-devices` on S3 hosted at `http://localhost:9000` to their original topics.
 
 #### All options:
 
@@ -84,7 +100,7 @@ The above command restores all records for a given topic to the same topic name.
 | topic            | t            |                                             | String         | The target topic where records are restored to. Otherwise topics get restored into their original topic name |
 | profile          |              |                                             | String         | Profile to user for S3 access. If not set uses `AWS_PROFILE` environment variable or the default profile.    |
 
-### S3 Config
+#### S3 Config
 
 S3 can be configured using the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or by setting
 a profile in the parameter `--profile`. Profile takes priority.
@@ -98,25 +114,19 @@ the config file from `~/.aws` would need to be mounted into the container.
 Additional configs for kafka can be set via environment variables prefixed with `KAFKA_`. If an argument is passed the
 argument takes priority.
 
-## Repair
+### Repair
 
-To repair corrupted records from a backup use the subcommand `repair`:
+Repairs corrupted records from with records from backup:
 
-Using docker:
+#### Demo call
 
 ```bash                     
-docker run repair --bucket <s3-backup-bucket> --data-directory <data-directory>
+cli repair --bucket s3-backup --data-directory kafka-data
 ```
 
-or gradle:
+This calls checks the kafka data in `kafka-data` and repairs them with backed up records in `s3-backup` if there are any corrupted.
 
-```bash
-
-./gradlew :cli:run --args="repair --bucket <s3-backup-bucket> --data-directory <data-directory>"
-
-```
-
-### All options:
+#### All options:
 | Option name       | Short | Required  | Description                                                       |
 |-------------------|-------|-----------|-------------------------------------------------------------------|
 | bucket            | b     | always    | Backup bucket to repair from                                      |
@@ -128,7 +138,7 @@ or gradle:
 | profile           |       |           | The profile to use for s3 access                                  |
 
 
-### S3 Config
+#### S3 Config
 
 S3 can be configured using the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or by setting 
 a profile in the parameter `--profile`. Profile takes priority.
