@@ -8,7 +8,7 @@ import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import java.util.*
 
-@Command(name = "restore")
+@Command(name = "restore", description = [" - restore backed up records from s3 to kafka"])
 class Restore : Runnable {
 
     @Option(names = ["-b", "--bucket"], required = true, description = ["Bucket to restore from"])
