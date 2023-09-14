@@ -1,6 +1,6 @@
 # Changes for lovely-kafka-backup
 
-## Unreleased
+## 2023-09-13 / 0.1.1
 
 ### Feature
 
