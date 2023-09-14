@@ -14,4 +14,6 @@ COPY backup-cli-libs/ /opt/backup-cli/
 COPY kafka-connect.yml /opt/
 COPY entrypoint.sh /entrypoint.sh
 
+COPY cli.sh /usr/bin/kbackup
+
 ENTRYPOINT ["/entrypoint.sh"]

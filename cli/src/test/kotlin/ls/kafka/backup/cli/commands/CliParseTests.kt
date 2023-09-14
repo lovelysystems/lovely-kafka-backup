@@ -11,7 +11,7 @@ class CliParseTests : FreeSpec({
 
     val restore = Restore()
     val repair = Repair()
-    val cli = CommandLine(BackupCli())
+    val cli = CommandLine(KBackup())
     cli.addSubcommand("restoreTest", restore)
     cli.addSubcommand("repairTest", repair)
     //using different name for subcommand because original command is added via annotations (needed because there are multiple subcommands)

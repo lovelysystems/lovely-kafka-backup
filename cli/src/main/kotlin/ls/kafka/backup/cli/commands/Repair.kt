@@ -9,7 +9,7 @@ import picocli.CommandLine.*
 import java.util.*
 import kotlin.io.path.Path
 
-@Command(name = "repair")
+@Command(name = "repair", description = [" - repair corrupted Kafka records from an S3 backup"])
 class Repair : Runnable {
 
     private val logger = KotlinLogging.logger { }
