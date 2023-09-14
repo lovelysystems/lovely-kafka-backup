@@ -40,34 +40,34 @@ The following environment variables can be used to configure the exporter:
 * `METRICS_PORT`: The port the metrics are exposed on. Default: `9876`
 
 
-# CLI
+# Kbackup CLI
 
-The CLI generally assumes that topics it writes to either exist or are auto created. It doesn't create any topics.
+The CLI `kbackup` generally assumes that topics it writes to either exist or are auto created. It doesn't create any topics.
 
 ## Running
 
 The cli can be run using gradle:
 
 ```bash
-./gradlew :cli:run --args="cli <subcommand> <args>..."
+./gradlew :cli:run --args="kbackup <subcommand> <args>..."
 ```
 
 or on container startup with docker:
 
 ```bash                     
-docker run --network host lovelysystems/lovely-kafka-backup:dev cli <subcommand> <args>...
+docker run --network host lovelysystems/lovely-kafka-backup:dev kbackup <subcommand> <args>...
 ```
 NOTE: network host is required if kafka is also running locally in a container
 
 or kubectl:
 
 ```bash
-kubectl run my-cli-container --rm -i --image lovelysystems/lovely-kafka-backup:dev "cli <subcommand> <args>..."
+kubectl run my-cli-container --rm -i --image lovelysystems/lovely-kafka-backup:dev "kbackup <subcommand> <args>..."
 ```
 
 or from within a running container:
 ```bash
-cli <subcommand>
+kbackup <subcommand>
 ```
 
 ## Subcommands
@@ -80,7 +80,7 @@ target topics. Offsets of the records are not restored.
 #### Demo call
 
 ```bash
-cli restore --bucket user-devices --s3Endpoint http://localhost:9000 --bootstrapServers localhost:9092
+kbackup restore --bucket user-devices --s3Endpoint http://localhost:9000 --bootstrapServers localhost:9092
 ```
 
 This command restores all the backed up records in the bucket `user-devices` on S3 hosted at `http://localhost:9000` to their original topics.
@@ -121,7 +121,7 @@ Repairs corrupted records from with records from backup:
 #### Demo call
 
 ```bash                     
-cli repair --bucket s3-backup --data-directory kafka-data
+kbackup repair --bucket s3-backup --data-directory kafka-data
 ```
 
 This calls checks the kafka data in `kafka-data` and repairs them with backed up records in `s3-backup` if there are any corrupted.

@@ -1,2 +1,2 @@
 #!/bin/bash
-java -jar /opt/backup-cli/cli.jar cli ${@}
+java -jar /opt/backup-cli/cli.jar kbackup ${@}
