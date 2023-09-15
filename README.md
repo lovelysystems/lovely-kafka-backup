@@ -9,6 +9,9 @@ Kafka to different storage systems and provides a CLI for manual backup and rest
 
 - Backup Kafka topics to any S3 compatible storage system (e.g. AWS S3, Minio, etc.)
 - Multiple formats for backup files (e.g. Binary, Avro, JSON, etc.) supported
+- Backup and restore Kafka topics using the `kbackup` cli
+- Repair corrupted Kafka log files using the `kbackup` cli
+- Prometheus metrics for Kafka S3 Backup Connector
 
 ## Requirements
 
@@ -18,13 +21,12 @@ Kafka to different storage systems and provides a CLI for manual backup and rest
 
 ## Kafka S3 Backup Connector Setup
 
-This connector uses
-the [Kafka Connect S3 Connector](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html)
-to backup Kafka topics to S3. It uses the [Kafka Connect API](https://kafka.apache.org/documentation/#connect) to
-stream data from Kafka.
+By default (no CMD or ENTRYPOINT defined) the container starts the Kafka S3 Backup Connector. This connector uses the
+[Kafka Connect S3 Connector](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html) to backup Kafka
+topics to S3. It uses the [Kafka Connect API](https://kafka.apache.org/documentation/#connect) to stream data from
+Kafka.
 
-The connector is created automatically when the application is started. See
-the [Configuration Properties](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html#configuration-properties)
+The connector is created automatically after the Kafka-Connect worker has started. See the [Configuration Properties](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html#configuration-properties)
 for a list of all available properties.
 
 The connector can be configured using a configuration file. See `localdev` for an example configuration file.
@@ -42,9 +44,11 @@ The following environment variables can be used to configure the exporter:
 
 # Kbackup CLI
 
-The CLI `kbackup` generally assumes that topics it writes to either exist or are auto created. It doesn't create any topics.
+The docker image also contains a CLI for manual restore operations. The CLI can be run using the `kbackup`
+command. `kbackup` generally assumes that topics it writes to either exist or are auto created. It doesn't create any
+topics.
 
-## Running
+## Usage
 
 The cli can be run using gradle:
 
@@ -65,8 +69,17 @@ or kubectl:
 kubectl run my-cli-container --rm -i --image lovelysystems/lovely-kafka-backup:dev "kbackup <subcommand> <args>..."
 ```
 
-or from within a running container:
+or within a standalone container:
+
 ```bash
+docker run --rm -it --entrypoint /bin/bash lovelysystems/lovely-kafka-backup:dev
+kbackup <subcommand>
+```
+
+or from within a running container:
+
+```bash
+$ docker exec -it <container> /bin/bash
 kbackup <subcommand>
 ```
 
@@ -145,3 +158,26 @@ a profile in the parameter `--profile`. Profile takes priority.
 
 NOTE: configuration via profile is mostly useful for development and running the cli via `gradle :cli:run`. To use the it in docker
 the config file from `~/.aws` would need to be mounted into the container.
+
+## Run Tests
+
+Tests can be run using Gradle:
+
+```bash
+./gradlew test
+```
+
+## Publish a new version
+
+Use Gradle to build and publish a new version of the docker image. The version is read from the `CHANGES.md` file.
+
+```bash
+./gradlew createTag
+./gradlew pushDockerImage
+```
+
+Publish the `lovely-kafka-format` library to Github Packages:
+
+```bash
+./gradlew publish
+```
