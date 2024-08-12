@@ -1,5 +1,16 @@
 # Changes for lovely-kafka-backup
 
+## unreleased
+
+### Fix
+
+- restore records to their original partition (previously used default partitioner)
+
+### Feature
+
+- upgrade to kotlin 1.9.20
+- upgrade to gradle 8.9
+
 ## 2023-09-14 / 0.2.0
 
 ### Feature
