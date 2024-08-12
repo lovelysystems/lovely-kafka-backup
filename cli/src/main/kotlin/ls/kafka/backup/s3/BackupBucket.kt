@@ -83,7 +83,7 @@ class BackupBucket(private val bucket: String, s3Config: S3Config, private val k
                 producer.send(
                     ProducerRecord(
                         targetTopic ?: BackupFile(key).topic,
-                        null,
+                        record.partition,
                         record.ts,
                         record.key,
                         record.value

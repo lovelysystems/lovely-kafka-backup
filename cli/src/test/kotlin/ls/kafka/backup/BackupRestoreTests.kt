@@ -11,7 +11,6 @@ import io.kotest.extensions.system.SystemEnvironmentTestListener
 import io.kotest.extensions.testcontainers.ContainerExtension
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.mockk.clearConstructorMockk
 import io.mockk.coEvery
@@ -36,8 +35,9 @@ import kotlin.time.toJavaDuration
 class BackupRestoreTests : FreeSpec({
     val bucket = "backup-bucket"
     val credentials = MinioCredentials("minioadmin", "minioadmin")
+    val topicNumPartitions = 3
 
-    val kafka = install(ContainerExtension(KafkaKraftContainer()))
+    val kafka = install(ContainerExtension(KafkaKraftContainer(partitions = topicNumPartitions)))
 
     mockkConstructor(ProfileCredentialsProvider::class)
     coEvery {
@@ -92,11 +92,13 @@ class BackupRestoreTests : FreeSpec({
         }
     }
 
-    fun consumeAllRecords(topic: String): List<ConsumerRecord<String, ByteArray>> {
+    fun consumeRecords(topic: String, partition: Int? = null): List<ConsumerRecord<String, ByteArray>> {
         val consumer = KafkaConsumer(kafkaConfig, StringDeserializer(), ByteArrayDeserializer())
         val partitions = consumer.partitionsFor(topic)!!
-        partitions.shouldNotBeEmpty()
-        val topicPartitions = partitions.map { TopicPartition(it.topic(), it.partition()) }
+        partitions.size shouldBe topicNumPartitions
+        val topicPartitions = partitions
+            .filter { partition == null || partition == it.partition() }
+            .map { TopicPartition(it.topic(), it.partition()) }
         consumer.assign(topicPartitions)
         return consumer.poll(5.seconds.toJavaDuration()).toList()
     }
@@ -112,7 +114,25 @@ class BackupRestoreTests : FreeSpec({
             backupBucket.restore("topics/$sourceTopic", targetTopic = "restored_test_restore_full_topic")
 
             "then created target topic should contain all records from backup" {
-                consumeAllRecords("restored_test_restore_full_topic").shouldHaveSize(recordCount)
+                consumeRecords("restored_test_restore_full_topic").shouldHaveSize(recordCount)
+            }
+        }
+    }
+
+    "when restoring a topic" - {
+        val sourceTopic = "test_retain_partitions"
+        val restoredTopic = "restored_$sourceTopic"
+        writeSampleRecords(sourceTopic, 0, 100, partition = 0)
+        writeSampleRecords(sourceTopic, 0, 50, partition = 2)
+        writeSampleRecords(sourceTopic, 0, 200, partition = 1)
+
+        "to new topic" - {
+            backupBucket.restore("topics/$sourceTopic", targetTopic = restoredTopic)
+
+            "then created target topic should retain the partition of the backup record" {
+                consumeRecords(restoredTopic, partition = 0).shouldHaveSize(100)
+                consumeRecords(restoredTopic, partition = 1).shouldHaveSize(200)
+                consumeRecords(restoredTopic, partition = 2).shouldHaveSize(50)
             }
         }
     }
@@ -124,7 +144,7 @@ class BackupRestoreTests : FreeSpec({
 
         "restored topic name should be the same and contain records" {
             backupBucket.restore()
-            consumeAllRecords(topic).shouldHaveSize(recordCount)
+            consumeRecords(topic).shouldHaveSize(recordCount)
         }
     }
 
@@ -143,7 +163,7 @@ class BackupRestoreTests : FreeSpec({
                 fromOffset = 10L,
                 toOffset = 70L
             )
-            consumeAllRecords(restoreTopic).shouldHaveSize(60)
+            consumeRecords(restoreTopic).shouldHaveSize(60)
         }
 
         "open end offset window should restore all records from the start offset" {
@@ -153,7 +173,7 @@ class BackupRestoreTests : FreeSpec({
                 targetTopic = restoreTopic,
                 fromOffset = 40L,
             )
-            consumeAllRecords(restoreTopic).shouldHaveSize(60)
+            consumeRecords(restoreTopic).shouldHaveSize(60)
         }
 
         "closed end offset window should restore all records from beginning" {
@@ -163,7 +183,7 @@ class BackupRestoreTests : FreeSpec({
                 targetTopic = restoreTopic,
                 toOffset = 50L
             )
-            consumeAllRecords(restoreTopic).shouldHaveSize(50)
+            consumeRecords(restoreTopic).shouldHaveSize(50)
         }
     }
 
@@ -184,7 +204,7 @@ class BackupRestoreTests : FreeSpec({
                 targetTopic = restoreTopic,
                 partition = 1
             )
-            consumeAllRecords(restoreTopic).shouldHaveSize(recordCount)
+            consumeRecords(restoreTopic).shouldHaveSize(recordCount)
         }
     }
 

@@ -6,6 +6,7 @@ import java.net.ServerSocket
 
 class KafkaKraftContainer(
     volumePath: String? = null,
+    partitions: Int = 1,
     private val hostPort: Int = ServerSocket(0).use { it.localPort }  // find a free port
     //Cant rely on Testcontainer mapping because ADVERTISED_LISTENERS
     // need to be configured with an address that is reachable by the client, if relying on Testcontainer
@@ -32,6 +33,7 @@ class KafkaKraftContainer(
             "KAFKA_CFG_ADVERTISED_LISTENERS" to "PLAINTEXT://127.0.0.1:$hostPort",
             "KAFKA_CFG_INTER_BROKER_LISTENER_NAME" to "PLAINTEXT",
 
+            "KAFKA_CFG_NUM_PARTITIONS" to "$partitions",
             "KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR" to "1",
             "KAFKA_CFG_GROUP_INITIAL_REBALANCE_DELAY_MS" to "0",
             "KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR" to "1",
