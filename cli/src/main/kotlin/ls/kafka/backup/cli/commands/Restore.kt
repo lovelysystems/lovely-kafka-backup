@@ -52,8 +52,11 @@ class Restore : Runnable {
     @Option(names = ["--profile"], description = ["The profile to use for s3 access."])
     var profile: String? = null
 
+    @Option(names = ["--region"], defaultValue = "eu-central-1", description = ["The region to use for s3 access."])
+    var region: String = ""
+
     override fun run() = runBlocking {
-        val s3Config = S3Config(s3Endpoint, profile)
+        val s3Config = S3Config(s3Endpoint, profile, region)
         val kafkaConfig = createPropertiesFromEnv(
             overrides = mapOf(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers)
                 .mapNotNull { (k, v) -> v?.let { k to v } }

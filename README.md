@@ -140,15 +140,16 @@ kbackup repair --bucket s3-backup --data-directory kafka-data
 This calls checks the kafka data in `kafka-data` and repairs them with backed up records in `s3-backup` if there are any corrupted.
 
 #### All options:
-| Option name       | Short | Required  | Description                                                       |
-|-------------------|-------|-----------|-------------------------------------------------------------------|
-| bucket            | b     | always    | Backup bucket to repair from                                      |
-| data-directory    |       | always    | Data directory to which contains the kafka data                   |
-| filter            | f     |           | glob pattern to filter log directories to repair. Defaults to all |
-| skipBroken        | s     |           | Flag. If set records which aren't in the backup are skipped       |
-| repair            | r     |           | Flag. If set the files are repaired otherwise just listed         |
-| s3Endpoint        |       |           | Url to S3. If not given defaults to AWS-S3                        |
-| profile           |       |           | The profile to use for s3 access                                  |
+| Option name    | Short | Required  | Description                                                       |
+|----------------|-------|-----------|-------------------------------------------------------------------|
+| bucket         | b     | always    | Backup bucket to repair from                                      |
+| data-directory |       | always    | Data directory to which contains the kafka data                   |
+| filter         | f     |           | glob pattern to filter log directories to repair. Defaults to all |
+| skipBroken     | s     |           | Flag. If set records which aren't in the backup are skipped       |
+| repair         | r     |           | Flag. If set the files are repaired otherwise just listed         |
+| s3Endpoint     |       |           | Url to S3. If not given defaults to AWS-S3                        |
+| region         |       |           | The region to use for s3 access                                   |
+| profile        |       |           | The profile to use for s3 access                                  |
 
 
 #### S3 Config
