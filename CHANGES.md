@@ -1,5 +1,11 @@
 # Changes for lovely-kafka-backup
 
+## Unreleased
+
+### Feature
+
+- restore: add option `region`
+
 ## 2024-08-12 / 0.3.0
 
 ### Fix
