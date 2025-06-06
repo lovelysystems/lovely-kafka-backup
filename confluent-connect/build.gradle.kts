@@ -21,4 +21,5 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    environment("AWS_REGION", "dummy") //aws sdk requires a configured region, minio (targeted during test) doesn't care about it
 }
