@@ -31,7 +31,6 @@ class BackupBucket(private val bucket: String, s3Config: S3Config, private val k
                 ProfileCredentialsProvider(profileName = s3Config.profile),
                 EnvironmentCredentialsProvider()
             )
-            region = s3Config.region
             forcePathStyle = true
         }
     }

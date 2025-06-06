@@ -1,5 +1,11 @@
 # Changes for lovely-kafka-backup
 
+## Unreleased
+
+### Breaking
+
+- remove hardcoded S3 Region `eu-central-1`, use default providers e.g. env `AWS_REGION` or file `~/.aws/config`
+
 ## 2024-08-12 / 0.3.0
 
 ### Fix
