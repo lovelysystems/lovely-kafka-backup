@@ -16,25 +16,12 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
-import io.mockk.clearConstructorMockk
-import io.mockk.coEvery
-import io.mockk.every
-import io.mockk.mockkConstructor
-import io.mockk.mockkStatic
-import io.mockk.spyk
+import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.flatMapConcat
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.toList
-import ls.kafka.backup.s3.BackupBucket
-import ls.kafka.backup.s3.DataDirectory
-import ls.kafka.backup.s3.S3Config
-import ls.kafka.backup.s3.missingOffsets
-import ls.kafka.backup.s3.toRecords
+import kotlinx.coroutines.flow.*
+import ls.kafka.backup.s3.*
 import ls.kafka.connect.storage.format.ByteArrayRecordFormat
-import ls.testcontainers.kafka.KafkaKraftContainer
+import ls.testcontainers.kafka.kafkaContainer
 import ls.testcontainers.minio.MinioContainer
 import ls.testcontainers.minio.MinioCredentials
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -67,7 +54,8 @@ class SegmentRepairTests : FreeSpec({
 
     val kafkaData = tempdir().toPath()
     val kafka = install(
-        ContainerExtension(KafkaKraftContainer(kafkaData.pathString)
+        ContainerExtension(
+            kafkaContainer(volumePath = kafkaData.pathString)
             .withCreateContainerCmdModifier { cmd ->
                 // workaround for CI environment where the default user is not root
                 if (System.getenv("CI").isNullOrEmpty()) {

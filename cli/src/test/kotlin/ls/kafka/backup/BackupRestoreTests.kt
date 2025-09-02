@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.toList
 import ls.kafka.backup.s3.BackupBucket
 import ls.kafka.backup.s3.S3Config
 import ls.kafka.connect.storage.format.ByteArrayRecordFormat
-import ls.testcontainers.kafka.KafkaKraftContainer
+import ls.testcontainers.kafka.kafkaContainer
 import ls.testcontainers.minio.MinioContainer
 import ls.testcontainers.minio.MinioCredentials
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -37,7 +37,7 @@ class BackupRestoreTests : FreeSpec({
     val credentials = MinioCredentials("minioadmin", "minioadmin")
     val topicNumPartitions = 3
 
-    val kafka = install(ContainerExtension(KafkaKraftContainer(partitions = topicNumPartitions)))
+    val kafka = install(ContainerExtension(kafkaContainer(partitions = topicNumPartitions)))
 
     mockkConstructor(ProfileCredentialsProvider::class)
     coEvery {

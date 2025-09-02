@@ -1,5 +1,11 @@
 # Changes for lovely-kafka-backup
 
+## unreleased
+
+### Development
+
+- use `apache/kafka` image for `KafkaContainer` in tests and `localdev/docker-compose.yml`
+
 ## 2025-06-06 / 1.0.0
 
 ### Breaking
