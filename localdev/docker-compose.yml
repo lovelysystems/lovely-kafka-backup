@@ -26,13 +26,13 @@ services:
     image: apache/kafka:3.9.1
     container_name: localdev-kafka
     volumes:
-      - "./volumes/kafka/data:/var/lib/kafka/data"
+      - "./volumes/kafka/data:/mnt/kafka/data"
     user: "0"
     ports:
       - "9092:9092"
     environment:
       # see config options here https://kafka.apache.org/documentation/#adminclientconfigs and prefix all with KAFKA_
-      KAFKA_CFG_BROKER_ID: "1"
+      KAFKA_BROKER_ID: "1"
       KAFKA_ENABLE_KRAFT: "yes"
       ALLOW_PLAINTEXT_LISTENER: "yes"
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,DOCKER:PLAINTEXT,HOST:PLAINTEXT'
@@ -47,7 +47,7 @@ services:
       # enable gzip compression (even if producer did not activate compression)
       KAFKA_COMPRESSION_TYPE: gzip
 
-      KAFKA_LOG_DIR: /var/lib/kafka/data
+      KAFKA_LOG_DIR: /mnt/kafka/data
       KAFKA_LOG_RETENTION_MS: -1
       KAFKA_LOG_RETENTION_BYTES: -1
 
@@ -98,12 +98,18 @@ services:
     volumes:
       - "./volumes/minio_data:/data"
     command: server /data  --console-address ":9001"
+    healthcheck:
+      test: [ "CMD", "mc", "ready", "local" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   ensure-bucket:
     image: minio/mc:latest
     depends_on:
-      - minio
+      minio:
+        condition: service_healthy
     entrypoint: >
       /bin/sh -c "
-          mc config host add minio http://minio:9000 minioadmin minioadmin;
+          mc alias set minio http://minio:9000 minioadmin minioadmin;
           mc mb minio/user-devices;"
