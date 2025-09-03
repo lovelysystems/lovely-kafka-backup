@@ -1,8 +1,11 @@
 package ls.testcontainers.kafka
 
-import org.testcontainers.containers.BindMode
+import com.github.dockerjava.api.model.Bind
+import com.github.dockerjava.api.model.Volume
+import org.testcontainers.containers.GenericContainer
 import org.testcontainers.kafka.KafkaContainer
 import org.testcontainers.utility.DockerImageName
+import org.testcontainers.utility.MountableFile
 
 fun kafkaContainer(
     image: String = "apache/kafka-native:3.9.1",
@@ -27,6 +30,18 @@ fun kafkaContainer(
         )
     )
     volumePath?.let { path ->
-        withFileSystemBind(path, "/tmp/kafka-logs", BindMode.READ_WRITE)
+        withFsBind(path, "/tmp/kafka-logs")
+    }
+}
+
+private fun GenericContainer<*>.withFsBind(hostPath: String, containerPath: String) {
+    withCreateContainerCmdModifier {
+        val binds = it.hostConfig?.binds.orEmpty().toList()
+        it.hostConfig?.withBinds(
+            binds + Bind(
+                MountableFile.forHostPath(hostPath).resolvedPath,
+                Volume(containerPath),
+            )
+        )
     }
 }
