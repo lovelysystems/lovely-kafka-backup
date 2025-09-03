@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-    implementation(testLibs.testcontainers)
+    api(testLibs.testcontainers.kafka)
 }

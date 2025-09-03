@@ -4,6 +4,8 @@ jobs:
   test:
     machine:
       image: ubuntu-2204:2023.04.2
+    environment:
+      CI: true
     steps:
       - run:
           name: Install Java 11
@@ -23,10 +25,10 @@ jobs:
           command: ./gradlew --version
       - run:
           name: Detekt
-          command: ./gradlew --console=plain detektAll
+          command: ./gradlew detektAll
       - run:
           name: Check
-          command: ./gradlew --console=plain check
+          command: ./gradlew check
       - store_test_results:
           path: build/test-results
       - save_cache:

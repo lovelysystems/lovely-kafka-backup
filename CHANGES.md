@@ -1,5 +1,16 @@
 # Changes for lovely-kafka-backup
 
+## unreleased
+
+### Feature
+
+- upgrade gradle to 8.14.3
+
+### Development
+
+- use `apache/kafka` image for `KafkaContainer` in tests and `localdev/docker-compose.yml`
+- move test results of subproject to have a report on CircleCI
+
 ## 2025-06-06 / 1.0.0
 
 ### Breaking

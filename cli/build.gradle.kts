@@ -27,7 +27,6 @@ dependencies {
     testImplementation(testLibs.kotest.runner.junit5)
     testImplementation(testLibs.kotest.assertions)
     testImplementation(testLibs.kotest.extensions.testcontainers)
-    testImplementation(testLibs.testcontainers)
     testImplementation(testLibs.mockk)
 
     testImplementation(libs.confluent.connect.s3)
@@ -37,4 +36,5 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+    environment("AWS_REGION", "eu-central-1") //aws sdk requires a configured region, minio (targeted during test) doesn't care about it
 }

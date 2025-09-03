@@ -1,5 +1,5 @@
-import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import io.gitlab.arturbosch.detekt.Detekt
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
 plugins {
     kotlin("jvm")
@@ -34,8 +34,16 @@ subprojects {
     // ensure that java 11 is used in all kotlin projects
     extensions.findByType<KotlinJvmProjectExtension>()?.apply {
         jvmToolchain {
-            (this as JavaToolchainSpec).languageVersion.set(JavaLanguageVersion.of(11))
+            languageVersion.set(JavaLanguageVersion.of(11))
         }
+    }
+    // Moving the test result to one directory to be able to store all of them on CircleCI
+    tasks.register("moveTestResults", Copy::class) {
+        from(layout.buildDirectory.dir("test-results/test"))
+        into("${rootProject.projectDir}/build/test-results/${project.name}")
+    }
+    tasks.withType<Test> {
+        finalizedBy("moveTestResults")
     }
 }
 
@@ -52,7 +60,7 @@ fun getFormattedProjectName(project: Project): String = ":${project.name}"
 /**
  *  Groups together all the known Detekt tasks & adds the non-default ones to the given subproject's "check" task
  */
-task("detektAll", type = Detekt::class) {
+val detektAll by tasks.registering(Detekt::class) {
     subprojects.forEach { project ->
         project.getAllTasks(true).values.flatten().forEach { task ->
             if (task.name == "detekt") {

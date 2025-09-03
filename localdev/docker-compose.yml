@@ -23,53 +23,53 @@ services:
       AWS_SECRET_ACCESS_KEY: minioadmin
 
   kafka:
-    image: bitnami/kafka:3.4.0
+    image: apache/kafka:3.9.1
     container_name: localdev-kafka
     volumes:
-      - "./volumes/kafka/data:/bitnami/kafka"
+      - "./volumes/kafka/data:/mnt/kafka/data"
     user: "0"
     ports:
       - "9092:9092"
     environment:
-      # for configuration options see https://github.com/bitnami/containers/blob/main/bitnami/kafka/README.md#configuration
-      # and prefix all configs from https://kafka.apache.org/documentation/#adminclientconfigs with KAFKA_CFG_
-      KAFKA_CFG_BROKER_ID: "1"
+      # see config options here https://kafka.apache.org/documentation/#adminclientconfigs and prefix all with KAFKA_
+      KAFKA_BROKER_ID: "1"
       KAFKA_ENABLE_KRAFT: "yes"
       ALLOW_PLAINTEXT_LISTENER: "yes"
-      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,DOCKER:PLAINTEXT,HOST:PLAINTEXT'
-      KAFKA_CFG_ADVERTISED_LISTENERS: 'DOCKER://kafka:29092,HOST://localhost:9092'
-      KAFKA_CFG_PROCESS_ROLES: 'broker,controller'
-      KAFKA_CFG_NODE_ID: 1
-      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
-      KAFKA_CFG_LISTENERS: 'DOCKER://kafka:29092,CONTROLLER://kafka:29093,HOST://0.0.0.0:9092'
-      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: 'DOCKER'
-      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,DOCKER:PLAINTEXT,HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'DOCKER://kafka:29092,HOST://localhost:9092'
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_NODE_ID: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      KAFKA_LISTENERS: 'DOCKER://kafka:29092,CONTROLLER://kafka:29093,HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'DOCKER'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
 
       # enable gzip compression (even if producer did not activate compression)
-      KAFKA_CFG_COMPRESSION_TYPE: gzip
+      KAFKA_COMPRESSION_TYPE: gzip
 
-      KAFKA_CFG_LOG_RETENTION_MS: -1
-      KAFKA_CFG_LOG_RETENTION_BYTES: -1
+      KAFKA_LOG_DIR: /mnt/kafka/data
+      KAFKA_LOG_RETENTION_MS: -1
+      KAFKA_LOG_RETENTION_BYTES: -1
 
       # stream time is defined by the source instead of the actual ingestion time
-      KAFKA_CFG_MESSAGE_TIMESTAMP_TYPE: CreateTime
+      KAFKA_MESSAGE_TIMESTAMP_TYPE: CreateTime
 
       # we allow deletion of topics in this dev setup, might not be used in prod
-      KAFKA_CFG_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
       # allow auto generation of topics
-      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
 
       # used for single kafka broker
-      KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_CFG_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
 
   # redpanda console (formerly kowl) https://github.com/redpanda-data/console
   kowl:
     image: docker.redpanda.com/redpandadata/console:v2.3.3
     ports:
-      - "5000:5000"
+      - "5001:5000"
     entrypoint: /bin/sh
     command: -c "echo \"$$CONSOLE_CONFIG_FILE\" > /tmp/config.yml; /app/console"
     environment:
@@ -98,12 +98,18 @@ services:
     volumes:
       - "./volumes/minio_data:/data"
     command: server /data  --console-address ":9001"
+    healthcheck:
+      test: [ "CMD", "mc", "ready", "local" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   ensure-bucket:
     image: minio/mc:latest
     depends_on:
-      - minio
+      minio:
+        condition: service_healthy
     entrypoint: >
       /bin/sh -c "
-          mc config host add minio http://minio:9000 minioadmin minioadmin;
+          mc alias set minio http://minio:9000 minioadmin minioadmin;
           mc mb minio/user-devices;"
