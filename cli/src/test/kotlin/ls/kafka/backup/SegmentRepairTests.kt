@@ -4,7 +4,10 @@ import aws.sdk.kotlin.runtime.auth.credentials.ProfileCredentialsProvider
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import io.confluent.connect.s3.S3SinkConnectorConfig
 import io.confluent.connect.s3.storage.S3Storage
+import io.kotest.core.annotation.EnabledCondition
+import io.kotest.core.annotation.EnabledIf
 import io.kotest.core.extensions.install
+import io.kotest.core.spec.Spec
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.engine.spec.tempdir
 import io.kotest.extensions.system.OverrideMode
@@ -44,16 +47,22 @@ import kotlin.io.path.div
 import kotlin.io.path.fileSize
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.pathString
+import kotlin.reflect.KClass
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
-// TODO: temporarily disable on CI as tests are failing there (needs investigation)
-private val IS_CI = !System.getenv("CI").isNullOrEmpty()
+class NoCI : EnabledCondition {
+    override fun enabled(kclass: KClass<out Spec>): Boolean = System.getenv("CI").isNullOrEmpty()
+}
 
+// TODO: temporarily disable on CI as tests are failing there (needs investigation)
+@EnabledIf(NoCI::class)
 @OptIn(ExperimentalCoroutinesApi::class)
 class SegmentRepairTests : FreeSpec({
     val bucket = "backup-bucket"
     val credentials = MinioCredentials("minioadmin", "minioadmin")
+
+    println("Running")
 
     val kafkaData = tempdir().toPath()
     val kafka = install(ContainerExtension(kafkaContainer(volumePath = kafkaData.pathString)))
@@ -117,7 +126,7 @@ class SegmentRepairTests : FreeSpec({
 
     val backupBucket = BackupBucket(bucket, S3Config(minio.getHostAddress()), kafkaConfig)
 
-    "segment file loading".config(enabled = !IS_CI) {
+    "segment file loading" {
         produceSampleRecords("load-test", 100)
 
         val dataDir = DataDirectory(kafkaData)
@@ -130,7 +139,7 @@ class SegmentRepairTests : FreeSpec({
         records.shouldHaveSize(100)
     }
 
-    "read batches".config(enabled = !IS_CI) {
+    "read batches" {
         val topic = "batch-read"
         produceSampleRecords(topic, 100)
         val dataDir = DataDirectory(kafkaData)
@@ -151,7 +160,7 @@ class SegmentRepairTests : FreeSpec({
         records.shouldHaveSize(100)
     }
 
-    "repair broken segments".config(enabled = !IS_CI) - {
+    "repair broken segments" - {
 
         "should do nothing if nothing is corrupted" {
             produceSampleRecords("uncorrupted", 100)
