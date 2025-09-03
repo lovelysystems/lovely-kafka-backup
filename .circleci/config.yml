@@ -4,6 +4,8 @@ jobs:
   test:
     machine:
       image: ubuntu-2204:2023.04.2
+    environment:
+      CI: true
     steps:
       - run:
           name: Install Java 11
