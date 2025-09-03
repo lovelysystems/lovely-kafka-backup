@@ -43,7 +43,6 @@ import java.util.*
 import kotlin.io.path.div
 import kotlin.io.path.fileSize
 import kotlin.io.path.listDirectoryEntries
-import kotlin.io.path.pathString
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
@@ -53,7 +52,7 @@ class SegmentRepairTests : FreeSpec({
     val credentials = MinioCredentials("minioadmin", "minioadmin")
 
     val kafkaData = tempdir().toPath()
-    val kafka = install(ContainerExtension(kafkaContainer(volumePath = kafkaData.pathString)))
+    val kafka = install(ContainerExtension(kafkaContainer(volumePath = null)))
 
     mockkConstructor(ProfileCredentialsProvider::class)
     coEvery {
