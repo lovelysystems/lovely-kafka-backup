@@ -39,10 +39,7 @@ subprojects {
     }
     // Moving the test result to one directory to be able to store all of them on CircleCI
     tasks.register("moveTestResults", Copy::class) {
-        from(
-            layout.buildDirectory.dir("test-results/test"),
-            layout.buildDirectory.dir("test-results/jvmTest"),
-        )
+        from(layout.buildDirectory.dir("test-results/test"))
         into("${rootProject.projectDir}/build/test-results/${project.name}")
     }
     tasks.withType<Test> {

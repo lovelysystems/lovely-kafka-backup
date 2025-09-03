@@ -56,12 +56,12 @@ class SegmentRepairTests : FreeSpec({
     val kafka = install(
         ContainerExtension(
             kafkaContainer(volumePath = kafkaData.pathString)
-            .withCreateContainerCmdModifier { cmd ->
-                // workaround for CI environment where the default user is not root
-                if (System.getenv("CI").isNullOrEmpty()) {
-                    cmd.withUser("root")
+                .withCreateContainerCmdModifier { cmd ->
+                    // workaround for CI environment where the default user is not root
+//                if (System.getenv("CI").isNullOrEmpty()) {
+//                    cmd.withUser("root")
+//                }
                 }
-            }
         )
     )
 
