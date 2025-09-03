@@ -62,8 +62,6 @@ class SegmentRepairTests : FreeSpec({
     val bucket = "backup-bucket"
     val credentials = MinioCredentials("minioadmin", "minioadmin")
 
-    println("Running")
-
     val kafkaData = tempdir().toPath()
     val kafka = install(ContainerExtension(kafkaContainer(volumePath = kafkaData.pathString)))
 
