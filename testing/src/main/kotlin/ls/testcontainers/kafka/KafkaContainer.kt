@@ -1,7 +1,6 @@
 package ls.testcontainers.kafka
 
 import org.testcontainers.containers.BindMode
-import org.testcontainers.containers.SelinuxContext
 import org.testcontainers.kafka.KafkaContainer
 import org.testcontainers.utility.DockerImageName
 
@@ -28,6 +27,6 @@ fun kafkaContainer(
         )
     )
     volumePath?.let { path ->
-        addFileSystemBind(path, "/tmp/kafka-logs", BindMode.READ_WRITE, SelinuxContext.SHARED)
+        withFileSystemBind(path, "/tmp/kafka-logs", BindMode.READ_WRITE)
     }
 }

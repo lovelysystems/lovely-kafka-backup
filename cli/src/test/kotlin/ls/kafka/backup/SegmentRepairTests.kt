@@ -53,17 +53,7 @@ class SegmentRepairTests : FreeSpec({
     val credentials = MinioCredentials("minioadmin", "minioadmin")
 
     val kafkaData = tempdir().toPath()
-    val kafka = install(
-        ContainerExtension(
-            kafkaContainer(volumePath = kafkaData.pathString)
-                .withCreateContainerCmdModifier { cmd ->
-                    // workaround for CI environment where the default user is not root
-//                if (System.getenv("CI").isNullOrEmpty()) {
-//                    cmd.withUser("root")
-//                }
-                }
-        )
-    )
+    val kafka = install(ContainerExtension(kafkaContainer(volumePath = kafkaData.pathString)))
 
     mockkConstructor(ProfileCredentialsProvider::class)
     coEvery {

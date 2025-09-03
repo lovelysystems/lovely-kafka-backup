@@ -23,10 +23,10 @@ jobs:
           command: ./gradlew --version
       - run:
           name: Detekt
-          command: ./gradlew --console=plain detektAll
+          command: ./gradlew detektAll
       - run:
           name: Check
-          command: ./gradlew --console=plain check
+          command: ./gradlew check --debug
       - store_test_results:
           path: build/test-results
       - save_cache:

@@ -37,4 +37,5 @@ dependencies {
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
     environment("AWS_REGION", "eu-central-1") //aws sdk requires a configured region, minio (targeted during test) doesn't care about it
+    testLogging { exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL }
 }
