@@ -8,6 +8,10 @@
 
 ### Development
 
+- push docker image to github container registry instead of docker hub
+
+### Development
+
 - use `apache/kafka` image for `KafkaContainer` in tests and `localdev/docker-compose.yml`
 - move test results of subproject to have a report on CircleCI
 

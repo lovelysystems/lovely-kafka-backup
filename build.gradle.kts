@@ -10,7 +10,7 @@ plugins {
 
 lovely {
     gitProject()
-    dockerProject("lovelysystems/lovely-kafka-backup") {
+    dockerProject("ghcr.io/lovelysystems/lovely-kafka-backup") {
         from("docker")
         from(project("confluent-connect").tasks["shadowJar"]) {
             into("confluent-connect-libs")
