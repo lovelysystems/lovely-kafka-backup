@@ -3,7 +3,7 @@ version: "3.9"
 services:
 
   kafka-connect:
-    image: lovelysystems/lovely-kafka-backup:dev
+    image: ghcr.io/lovelysystems/lovely-kafka-backup:dev
     ports:
       - "8083:8083"
     volumes:
@@ -15,7 +15,7 @@ services:
       AWS_SECRET_ACCESS_KEY: minioadmin
 
   kbackup:
-    image: lovelysystems/lovely-kafka-backup:dev
+    image: ghcr.io/lovelysystems/lovely-kafka-backup:dev
     # run bash and wait for user input
     tty: true
     environment:
