@@ -59,20 +59,20 @@ The cli can be run using gradle:
 or on container startup with docker:
 
 ```bash                     
-docker run --network host lovelysystems/lovely-kafka-backup:dev kbackup <subcommand> <args>...
+docker run --network host ghcr.io/lovelysystems/lovely-kafka-backup:dev kbackup <subcommand> <args>...
 ```
 NOTE: network host is required if kafka is also running locally in a container
 
 or kubectl:
 
 ```bash
-kubectl run my-cli-container --rm -i --image lovelysystems/lovely-kafka-backup:dev "kbackup <subcommand> <args>..."
+kubectl run my-cli-container --rm -i --image ghcr.io/lovelysystems/lovely-kafka-backup:dev "kbackup <subcommand> <args>..."
 ```
 
 or within a standalone container:
 
 ```bash
-docker run --rm -it --entrypoint /bin/bash lovelysystems/lovely-kafka-backup:dev
+docker run --rm -it --entrypoint /bin/bash ghcr.io/lovelysystems/lovely-kafka-backup:dev
 kbackup <subcommand>
 ```
 
